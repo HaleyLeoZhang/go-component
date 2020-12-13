@@ -38,6 +38,7 @@ func New(conf *Config) (db *gorm.DB, err error) {
 
 	db.DB().SetMaxIdleConns(conf.MaxIdleConns)
 	db.DB().SetMaxOpenConns(conf.MaxOpenConns)
+	db.DB().SetConnMaxLifetime(conf.MaxLeftTime)
 	return db, nil
 }
 
