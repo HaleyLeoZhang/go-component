@@ -26,8 +26,7 @@ type Config struct {
 }
 
 func New(conf *Config) (db *gorm.DB, err error) {
-	// db, err = gorm.Open(setting.DatabaseSetting.Type, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%v)/%s?charset=utf8&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%v)/%s?charset=utf8&parseTime=True&loc=Local",
 		conf.User, conf.Password, conf.Host, conf.Port, conf.Database)
 	db, err = gorm.Open(conf.Type, dsn)
 
