@@ -15,6 +15,6 @@ func TestContext(t *testing.T){
 	t.Log("Goroutine is awakened")
 	err := Context(ctxCancel, db)
 	if err != nil {
-		t.Fatalf("Err(%+v)db(%+v)", err)
+		t.Fatalf("Err(%+v)", err)
 	}
 }
