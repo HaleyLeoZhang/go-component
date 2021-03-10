@@ -8,10 +8,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type DB struct {
-	*gorm.DB
-}
-
 type Config struct {
 	Name         string        `yaml:"name" json:"name"` // 用于 Trace 识别
 	Type         string        `yaml:"type" json:"type"`
