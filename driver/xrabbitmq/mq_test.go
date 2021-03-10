@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 	app.PullLimit = 3 // 每次最多拉多少条
 	app.ConsumerLimit = 2 // 每次最多 多少个消费者
 	app.Exchange = "amq.topic" // 交换机名
-	app.Queue = "email_sender" // 交换机
+	app.Queue = "email_sender" // 消费队列
 	app.Start()
 	app.QueueDeclare()
 	app.BindRoutingKey("email.sender") // 初始化约定要绑定的 routing_key
