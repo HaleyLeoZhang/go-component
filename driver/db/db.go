@@ -40,9 +40,3 @@ func New(conf *Config) (db *gorm.DB, err error) {
 func Close(db *gorm.DB) {
 	defer db.Close()
 }
-
-// 计算分页信息
-func GetPageInfo(page int, size int) (int, int) {
-	offset := (page - 1) * size
-	return offset, size
-}
