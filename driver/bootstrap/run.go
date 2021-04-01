@@ -42,16 +42,19 @@ func (b *Bootstrap) Stop(callback func()) {
 	// - 调试的时候 kill 目标请杀掉对应 tmp 进程即可
 	signal.Notify(b.ExitSignal, os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	select {
-	case s := <-b.ExitSignal: // 阻塞直至有信号传入
-		xlog.Infof("Received Exit Signal: %v", s)
-		callback()
-		os.Exit(0)
-	case err := <-b.NotifyError:
-		xlog.Errorf("Bootstrap.Start.Err(%+v)", err)
-		b.ExitSignal <- syscall.SIGINT
-		//case <-time.After(time.Second * 3): // 检测进程是否存活，暂不需要
-		//	xlog.Info("Bootstrap.Loop.Alive")
+	for {
+		select {
+		case s := <-b.ExitSignal: // 阻塞直至有信号传入
+			xlog.Infof("Received Exit Signal: %v", s)
+			callback()
+			os.Exit(0)
+		case err := <-b.NotifyError:
+			xlog.Errorf("Bootstrap.Start.Err(%+v)", err)
+			b.ExitSignal <- syscall.SIGINT
+			//case <-time.After(time.Second * 3): // 检测进程是否存活，暂不需要
+			//	xlog.Info("Bootstrap.Loop.Alive")
+		}
+		xlog.Info("Bootstrap.test")
 	}
 
 }
