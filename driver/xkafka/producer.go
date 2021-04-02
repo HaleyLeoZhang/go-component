@@ -1,7 +1,6 @@
 package xkafka
 
 import (
-	"encoding/json"
 	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 	"github.com/Shopify/sarama"
 )
@@ -39,6 +38,7 @@ func (p *Producer) Close() error {
 	_ = p.asyncProducer.Close()
 	return nil
 }
+
 // ----------------------------------------
 //   同步发送消息
 // ----------------------------------------
@@ -46,12 +46,7 @@ func (p *Producer) Close() error {
 // ----------------------------------------
 
 // - 轮询节点插入
-func (p *Producer) SendMsg(topic string, message interface{}) (err error) {
-	bs, err := json.Marshal(message)
-	if err != nil {
-		xlog.Errorf("SendMsg To topic(%s) error(%+v) message(%+v)", topic, err, message)
-		return
-	}
+func (p *Producer) SendMsg(topic string, bs []byte) (err error) {
 	partition, commitId, err := p.syncProducer.SendMessage(topic, bs)
 	if err != nil {
 		xlog.Errorf("SendMsg To topic(%s) error(%v) partition(%d),commitId(%d)", topic, err, partition, commitId)
@@ -62,12 +57,7 @@ func (p *Producer) SendMsg(topic string, message interface{}) (err error) {
 }
 
 // - 依据key计算分区刷入
-func (p *Producer) SendMsgByKey(topic string, key string, message interface{}) (err error) {
-	bs, err := json.Marshal(message)
-	if err != nil {
-		xlog.Errorf("SendMsg To topic(%s) error(%+v) message(%+v)", topic, err, message)
-		return
-	}
+func (p *Producer) SendMsgByKey(topic string, key string, bs []byte) (err error) {
 	saraMsg := &sarama.ProducerMessage{
 		Topic: topic,
 		Key:   sarama.ByteEncoder(key),
@@ -89,12 +79,7 @@ func (p *Producer) SendMsgByKey(topic string, key string, message interface{}) (
 // ----------------------------------------
 
 // - 轮询节点插入
-func (p *Producer) SendMsgAsync(topic string, message interface{}) (err error) {
-	bs, err := json.Marshal(message)
-	if err != nil {
-		xlog.Errorf("SendMsgAsync To topic(%s) error(%+v) message(%+v)", topic, err, message)
-		return
-	}
+func (p *Producer) SendMsgAsync(topic string, bs []byte) (err error) {
 	err = p.asyncProducer.AsyncPublish(topic, bs)
 	if err != nil {
 		xlog.Errorf("SendMsgAsync To topic(%s) error(%v)", topic, err)
@@ -105,12 +90,7 @@ func (p *Producer) SendMsgAsync(topic string, message interface{}) (err error) {
 }
 
 // - 依据key计算分区刷入
-func (p *Producer) SendMsgAsyncByKey(topic string, key string, message interface{}) (err error) {
-	bs, err := json.Marshal(message)
-	if err != nil {
-		xlog.Errorf("SendMsgAsync To topic(%s) error(%+v) message(%+v)", topic, err, message)
-		return
-	}
+func (p *Producer) SendMsgAsyncByKey(topic string, key string, bs []byte) (err error) {
 	saraMsg := &sarama.ProducerMessage{
 		Topic: topic,
 		Key:   sarama.ByteEncoder(key),

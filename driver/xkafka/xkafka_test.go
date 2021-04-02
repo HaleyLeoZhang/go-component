@@ -115,22 +115,26 @@ func TestProducer(t *testing.T) {
 	d := NewProducer(config.Kafka)
 	one := &TestSmtp{}
 	one.SenderName = "测试同步"
-	err := d.SendMsg(testTopic, one)
+	bs, _ := json.Marshal(one)
+	err := d.SendMsg(testTopic, bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	one.SenderName = "测试Key"
-	err = d.SendMsgByKey(testTopic, "key2333", one)
+	bs, _ = json.Marshal(one)
+	err = d.SendMsgByKey(testTopic, "key2333", bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	one.SenderName = "测试异步"
-	err = d.SendMsgAsync(testTopic, one)
+	bs, _ = json.Marshal(one)
+	err = d.SendMsgAsync(testTopic, bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	one.SenderName = "测试异步key"
-	err = d.SendMsgAsyncByKey(testTopic, "key2333", one)
+	bs, _ = json.Marshal(one)
+	err = d.SendMsgAsyncByKey(testTopic, "key2333", bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
