@@ -12,7 +12,7 @@ type Config struct {
 	Name           string        `yaml:"name" json:"name"` // 用于 Trace 识别
 	Ip             string        `yaml:"ip" json:"ip"`
 	Port           int           `yaml:"port" json:"port"`
-	Timeout        string        `yaml:"timeout" json:"timeout"`
+	Pprof          bool          `yaml:"pprof" json:"pprof"` // true 开启  pprof 性能监控路由
 	ReadTimeout    time.Duration `yaml:"readTimeout" json:"readTimeout"`
 	WriteTimeout   time.Duration `yaml:"writeTimeout" json:"writeTimeout"`
 	MaxHeaderBytes int           `yaml:"maxHeaderBytes" json:"maxHeaderBytes"`
@@ -20,6 +20,12 @@ type Config struct {
 
 func Run(c *Config, routersInit *gin.Engine) {
 	addrString := fmt.Sprintf("%s:%v", c.Ip, c.Port)
+
+	if c.Pprof {
+		// pprof 相关说明 http://www.hlzblog.top/article/74.html
+		xlog.Info("Enabled pprof")
+		Wrap(routersInit)
+	}
 
 	server := &http.Server{
 		Addr:           addrString,
