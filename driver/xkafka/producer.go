@@ -33,6 +33,12 @@ func NewProducer(cfg *Config) (p *Producer) {
 	return
 }
 
+// 平滑关闭
+func (p *Producer) Close() error {
+	_ = p.syncProducer.Close()
+	_ = p.asyncProducer.Close()
+	return nil
+}
 // ----------------------------------------
 //   同步发送消息
 // ----------------------------------------
