@@ -20,7 +20,7 @@ type TestConfig struct {
 
 var config = &TestConfig{}
 
-var ctx = context.Background()
+//var ctx = context.Background()
 
 func TestMain(m *testing.M) {
 	InitConfig()
@@ -65,7 +65,7 @@ func TestConsumer(t *testing.T) {
 	}
 	// 因为上面 Start() 方法不阻塞，为了消费者正常消费，请不要让主进程退出
 	a := make(chan int)
-	<- a
+	<-a
 	xlog.Infof("consumer done")
 }
 
@@ -84,7 +84,7 @@ func handlerExampleStart(session *ConsumerSession, msgs <-chan *sarama.ConsumerM
 		eg.GOMAXPROCS(1)
 		for _, business := range messages {
 			tmp := business
-			eg.Go(func(ctx context.Context) error {
+			eg.Go(func(context.Context) error {
 				xlog.Infof("当前数据 (%v)", tmp)
 				return nil
 			})
@@ -109,7 +109,6 @@ func mergeEmailMessageHandler(msgs []*sarama.ConsumerMessage) (batchList []*Test
 	return
 }
 
-
 // 生产者测试
 func TestProducer(t *testing.T) {
 	testTopic := "biz_email"
@@ -131,9 +130,9 @@ func TestProducer(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	one.SenderName = "测试异步key"
-	err = d.SendMsgAsyncByKey(testTopic,"key2333", one)
+	err = d.SendMsgAsyncByKey(testTopic, "key2333", one)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
-	<- time.After(3 * time.Second) // 等待异步刷入
+	<-time.After(3 * time.Second) // 等待异步刷入
 }
