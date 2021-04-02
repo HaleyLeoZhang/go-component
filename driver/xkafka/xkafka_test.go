@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 type TestConfig struct {
@@ -28,7 +29,7 @@ func TestMain(m *testing.M) {
 
 func InitConfig() {
 	var yamlFile string
-	yamlFile, err := filepath.Abs("./app.yaml")
+	yamlFile, err := filepath.Abs("./app.yaml") // 示例的kafka配置文件请看这个文件
 	if err != nil {
 		panic(err)
 	}
@@ -58,12 +59,14 @@ func TestConsumer(t *testing.T) {
 	topicList := []string{"biz_email"}
 	d := NewConsumer(config.Kafka, topicList, consumerGroup)
 	d.Consumer.RegisterHandler(handlerExampleStart)
-	err := d.Consumer.Start()
+	err := d.Consumer.Start() // 请注意：内部消息者是异步的，此方法不会产生阻塞
 	if err != nil {
 		xlog.Errorf("handlerExampleStart  Err(%+v)", err)
-	} else {
-		xlog.Info("handlerExampleStart  New")
 	}
+	// 因为上面 Start() 方法不阻塞，为了消费者正常消费，请不要让主进程退出
+	a := make(chan int)
+	<- a
+	xlog.Infof("consumer done")
 }
 
 func handlerExampleStart(session *ConsumerSession, msgs <-chan *sarama.ConsumerMessage) (errKafka error) {
@@ -127,5 +130,10 @@ func TestProducer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
-
+	one.SenderName = "测试异步key"
+	err = d.SendMsgAsyncByKey(testTopic,"key2333", one)
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+	<- time.After(3 * time.Second) // 等待异步刷入
 }
