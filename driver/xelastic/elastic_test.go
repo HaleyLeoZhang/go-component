@@ -216,7 +216,7 @@ func TestDoSearch(t *testing.T) {
 		From(offset).Size(limit). // 取数据区间
 		Query(search).
 		FetchSourceContext(v7.NewFetchSourceContext(true).Include(fields...)).
-		SearchType("dfs_query_then_fetch").
+		SearchType("dfs_query_then_fetch"). // 前台系统用默认的就可以了，后台系统可以用dfs  https://blog.csdn.net/HuoqilinHeiqiji/article/details/103460430
 		Do(ctx)
 	if err != nil {
 		err = errors.WithStack(err)
