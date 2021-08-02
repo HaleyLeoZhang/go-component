@@ -1,0 +1,9 @@
+elastic:
+  addrs:
+    - "http://127.0.0.1:9200"
+  username: ""
+  password: ""
+  healthcheckEnabled: true
+  snifferEnabled: false
+  healthtimeout: "3s"
+  snifferTimeout: "3s"
