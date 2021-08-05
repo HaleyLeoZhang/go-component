@@ -36,8 +36,7 @@ func New(c *Config) *gin.Engine {
 
 // 获取单个Gin
 func NewGin(c *gin.Context) *Gin {
-	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout*time.Second)
-	defer cancelFunc()
+	ctx, _ := context.WithTimeout(context.Background(), timeout*time.Second)
 
 	o := &Gin{
 		GinContext: c,
