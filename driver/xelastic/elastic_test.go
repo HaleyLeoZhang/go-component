@@ -212,7 +212,7 @@ func TestDoSearch(t *testing.T) {
 	offset := (page - 1) * limit
 
 	result, err := instance.Search().Index(index).
-		Sort("id", false). // 依据Id
+		Sort("id", false).        // 依据Id
 		From(offset).Size(limit). // 取数据区间
 		Query(search).
 		FetchSourceContext(v7.NewFetchSourceContext(true).Include(fields...)).

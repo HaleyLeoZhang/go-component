@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-func TestContext(t *testing.T){
-	timeout :=  1 * time.Second
-	sleepSecond :=  2 * time.Second
-	ctxCancel,_ := context.WithTimeout(ctx, timeout)
+func TestContext(t *testing.T) {
+	timeout := 1 * time.Second
+	sleepSecond := 2 * time.Second
+	ctxCancel, _ := context.WithTimeout(ctx, timeout)
 	t.Log("Goroutine is hanging")
 	time.Sleep(sleepSecond)
 	t.Log("Goroutine is awakened")

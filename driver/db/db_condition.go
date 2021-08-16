@@ -61,7 +61,6 @@ func GetPageInfo(page int, size int) (int, int) {
 	return offset, size
 }
 
-
 /* Demo
 cond := &base.DBConditions{
 	Select = "id"

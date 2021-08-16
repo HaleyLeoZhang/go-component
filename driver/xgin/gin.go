@@ -13,6 +13,7 @@ var timeout time.Duration
 type Gin struct {
 	GinContext *gin.Context // xgin context
 	C          context.Context
+	Cancel     context.CancelFunc
 }
 
 type Config struct {
@@ -36,11 +37,12 @@ func New(c *Config) *gin.Engine {
 
 // 获取单个Gin
 func NewGin(c *gin.Context) *Gin {
-	ctx, _ := context.WithTimeout(context.Background(), timeout*time.Second)
+	ctx, cancelFun := context.WithTimeout(context.Background(), timeout)
 
 	o := &Gin{
 		GinContext: c,
 		C:          ctx,
+		Cancel:     cancelFun,
 	}
 	return o
 }

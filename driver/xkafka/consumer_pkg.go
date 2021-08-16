@@ -122,7 +122,7 @@ func (g *GroupConsumer) Start() (err error) {
 	go func() {
 		defer g.waiter.Done()
 		for {
-			xlog.Infof("Listening Kafka Group(%v) Topic(%v)",  g.group, strings.Join(g.topics, ","))
+			xlog.Infof("Listening Kafka Group(%v) Topic(%v)", g.group, strings.Join(g.topics, ","))
 			if err := g.consumer.Consume(g.ctx, g.topics, g); err != nil {
 				xlog.Errorf("Error from consumer: %v", err)
 				continue
