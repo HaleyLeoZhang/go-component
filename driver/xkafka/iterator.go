@@ -15,7 +15,7 @@ func IteratorBatchFetch(session *ConsumerSession, msgs <-chan *sarama.ConsumerMe
 	return func() ([]*sarama.ConsumerMessage, bool) {
 		msg := make([]*sarama.ConsumerMessage, 0)
 		var ticker *time.Ticker
-		ticker = time.NewTicker(time.Second * timeout)
+		ticker = time.NewTicker(timeout)
 		defer ticker.Stop()
 		if lastMsg != nil {
 			session.Commit(lastMsg)
