@@ -22,7 +22,6 @@ func TestNewGin(t *testing.T) {
 }
 
 func LabCancel(t *testing.T, cx context.Context, text int) (err error) {
-
 	time.Sleep(2 * time.Second)
 	err = cx.Err()
 	res := cx.Value("2323333")
@@ -43,4 +42,9 @@ func LabCancel(t *testing.T, cx context.Context, text int) (err error) {
 		}
 	}
 	return
+}
+
+func TestGinError(t *testing.T) {
+	err := NewBusinessError("这里有异常了哈", HTTP_RESPONSE_CODE_UNKNOWN_FAIL)
+	t.Logf("Show error instance(%+v)", err)
 }

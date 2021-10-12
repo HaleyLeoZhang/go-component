@@ -39,12 +39,12 @@ func (o *Gin) Response(err error, data interface{}) {
 			code = businessError.Code
 			message = businessError.Message
 			data = nil
-			xlog.Infof("Response.BusinessError.%+v", err)
+			xlog.Infof("Response BusinessError(%+v)", err)
 		default:
 			code = HTTP_RESPONSE_CODE_UNKNOWN_FAIL
 			message = "服务繁忙"
 			data = nil
-			xlog.Errorf("Response.Error.%+v", err)
+			xlog.Errorf("Response Error(%+v)", err)
 		}
 	}
 	o.GinContext.JSON(http.StatusOK, ResponseModel{
@@ -52,5 +52,10 @@ func (o *Gin) Response(err error, data interface{}) {
 		Msg:  message,
 		Data: data,
 	})
+	return
+}
+
+func NewBusinessError(msg string, code int) (err *BusinessError) {
+	err = &BusinessError{Message: msg, Code: code}
 	return
 }

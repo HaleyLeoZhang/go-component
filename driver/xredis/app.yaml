@@ -1,0 +1,12 @@
+redis:
+  name: "comic_app"
+  proto: "tcp"
+  addr: "127.0.0.1:6379"
+  dialTimeout: "200ms"
+  readTimeout: "200ms"
+  writeTimeout: "200ms"
+  expire: "10s"
+  pool:
+    active: 200
+    idle: 100
+    idleTimeout: "80s"
