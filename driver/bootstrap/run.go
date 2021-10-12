@@ -26,9 +26,9 @@ func (b *Bootstrap) Start(callback func()) *Bootstrap {
 			xlog.Errorf("App.Panic.(%v)", p)
 		}
 	}()
-	xlog.Info("Bootstrap.ing")
+	xlog.Info("Bootstrap ing")
 	callback()
-	xlog.Info("Bootstrap.done")
+	xlog.Info("Bootstrap done")
 	return b
 }
 
@@ -49,12 +49,12 @@ func (b *Bootstrap) Stop(callback func()) {
 			callback()
 			os.Exit(0)
 		case err := <-b.NotifyError:
-			xlog.Errorf("Bootstrap.Start.Err(%+v)", err)
+			xlog.Errorf("Bootstrap Start Err(%+v)", err)
 			b.ExitSignal <- syscall.SIGINT
 			//case <-time.After(time.Second * 3): // 检测进程是否存活，暂不需要
 			//	xlog.Info("Bootstrap.Loop.Alive")
 		}
-		xlog.Info("Bootstrap.test")
+		xlog.Info("Bootstrap test")
 	}
 
 }
