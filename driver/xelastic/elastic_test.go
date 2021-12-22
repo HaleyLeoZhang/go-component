@@ -20,8 +20,8 @@ const (
 	TestMapping = `
 {
 	"settings":{
-		"number_of_shards":1,
-		"number_of_replicas":0
+		"number_of_shards":3,
+		"number_of_replicas":2
 	},
 	"mappings":{
 	    "properties":{
@@ -176,7 +176,7 @@ func TestDoSearch(t *testing.T) {
 	// - 设置需要的字段
 	fields := []string{"id", "title", "describe", "category"}
 	search := v7.NewBoolQuery()
-	search.Must(v7.NewTermsQuery("describe", "画像"))
+	search.Must(v7.NewMatchQuery("describe", "画像")) // 中文分词直接用
 	/**
 	// 需要避坑的： should 和 must 在同一层级的时候 must 会生效 但是 should 不会
 
@@ -212,7 +212,7 @@ func TestDoSearch(t *testing.T) {
 	offset := (page - 1) * limit
 
 	result, err := instance.Search().Index(index).
-		Sort("id", false).        // 依据Id
+		Sort("id", false). // 依据Id
 		From(offset).Size(limit). // 取数据区间
 		Query(search).
 		FetchSourceContext(v7.NewFetchSourceContext(true).Include(fields...)).
@@ -266,8 +266,8 @@ func TestDoDelete(t *testing.T) {
 	t.Log("--------------正在 Delete--------------")
 	_, err := instance.Delete().Index(index).Id(item.GetIdString()).Do(ctx)
 	if err != nil {
-		if v7.IsStatusCode(err, 404) || v7.IsStatusCode(err, 409) {
-			xlog.Warnf("DeleteSingleGoods Err(%+v) id(%v)", err, item.Id)
+		if v7.IsNotFound(err) || v7.IsConflict(err) {
+			err = nil
 		} else {
 			xlog.Errorf("DeleteSingleGoods Err(%+v) id(%v)", err, item.Id)
 		}
