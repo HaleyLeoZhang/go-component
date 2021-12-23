@@ -5,5 +5,5 @@ elastic:
   password: ""
   healthCheckEnabled: true
   snifferEnabled: false
-  healthTimeOut: "3s"
+  healthTimeout: "3s"
   snifferTimeout: "3s"
