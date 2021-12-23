@@ -3,12 +3,12 @@ package xconsul
 import (
 	"context"
 	"fmt"
+	"github.com/HaleyLeoZhang/go-component/helper"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 type TestConfig struct {
@@ -24,7 +24,6 @@ var (
 
 const (
 	SERVICE_NAME = "comic.pre.hlzblog.top"
-	HTTP_IP      = "192.168.56.1"
 	HTTP_PORT    = 4211
 )
 
@@ -73,12 +72,12 @@ func handlerHealth(w http.ResponseWriter, r *http.Request) {
 //ServerLoad 启动
 func ServerLoad() {
 	healthRouterName := "/health"
-	clt.register = NewRegister(SERVICE_NAME, HTTP_IP, HTTP_PORT, healthRouterName)
-	go func() {
-		// 注销
-		<-time.After(time.Second * 10)
-		_ = clt.Deregister()
-	}()
+	clt.register = NewRegister(SERVICE_NAME, helper.GetLocalIpV4(), HTTP_PORT, healthRouterName)
+	//go func() {
+	//	// 注销
+	//	<-time.After(time.Second * 10)
+	//	_ = clt.Deregister()
+	//}()
 	// 注册
 	err = clt.HttpRegister()
 	if err != nil {
