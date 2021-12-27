@@ -11,7 +11,10 @@ type Client struct {
 }
 
 type Config struct {
-	Addr string `yaml:"addr"`
+	Addr              string `yaml:"addr"`                // consul 的ui路由
+	ServiceName       string `yaml:"service_name"`        // 注册到consul的服务名
+	HttpPort          int    `yaml:"http_port"`           // 对外暴露http服务的端口
+	HealthCheckRouter string `yaml:"health_check_router"` // 健康检查的路由
 }
 
 type Register struct {

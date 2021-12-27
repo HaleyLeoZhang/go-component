@@ -3,7 +3,7 @@ package xconsul
 import (
 	"context"
 	"fmt"
-	"github.com/HaleyLeoZhang/go-component/helper"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
@@ -17,7 +17,7 @@ type TestConfig struct {
 
 var (
 	cfg = &TestConfig{}
-	clt Client
+	clt *Client
 	ctx = context.Background()
 	err error
 )
@@ -71,8 +71,6 @@ func handlerHealth(w http.ResponseWriter, r *http.Request) {
 
 //ServerLoad 启动
 func ServerLoad() {
-	healthRouterName := "/health"
-	clt.register = NewRegister(SERVICE_NAME, helper.GetLocalIpV4(), HTTP_PORT, healthRouterName)
 	//go func() {
 	//	// 注销
 	//	<-time.After(time.Second * 10)
@@ -81,13 +79,13 @@ func ServerLoad() {
 	// 注册
 	err = clt.HttpRegister()
 	if err != nil {
-		fmt.Println("error: ", err.Error())
+		panic(errors.WithStack(err))
 	}
 	// 定义一个http接口
-	http.HandleFunc(healthRouterName, handlerHealth)
-	err = http.ListenAndServe(fmt.Sprintf(":%v", HTTP_PORT), nil)
+	http.HandleFunc(cfg.Consul.HealthCheckRouter, handlerHealth)
+	err = http.ListenAndServe(fmt.Sprintf(":%v", cfg.Consul.HttpPort), nil)
 	if err != nil {
-		fmt.Println("error: ", err.Error())
+		panic(errors.WithStack(err))
 	}
 
 }

@@ -1,2 +1,5 @@
 consul:
   addr: "http://127.0.0.1:8500" # consul 地址
+  service_name: "test_consul" # 注册到consul的服务名
+  http_port: 23131 # 对外暴露http服务的端口
+  health_check_router: "/health" # 健康检查的路由
