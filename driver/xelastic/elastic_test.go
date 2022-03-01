@@ -18,6 +18,7 @@ import (
 const (
 	// 测试用的 es 对应 mapping ---- 这个 Mapping 需要有 ik 分词器
 	// --- 安装 ik 分词插件 elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.5.1/elasticsearch-analysis-ik-7.5.1.zip
+	// --- Elasticsearch7.x 字段数据类型  https://www.cnblogs.com/xiaofeng-fu/p/13596725.html
 	TestMapping = `
 {
 	"settings":{
@@ -179,9 +180,9 @@ func TestDoSearch(t *testing.T) {
 	search := v7.NewBoolQuery()
 	//search.Must(v7.NewMatchQuery("describe", "画像")) // 中文分词直接用
 
-	shouldConditionTwoShape1 := v7.NewRangeQuery("id").Gte(50).Lte(500) // 指代Id必须 >= 50 且 < 500
-	shouldConditionTwoShape2 := v7.NewMatchQuery("title", "沐临风") // 分词查询
-	shouldConditionTwoShape3 := v7.NewTermsQuery("comment", v7.NewMatchQuery("comment.username","沐临风")) // 精确查询
+	shouldConditionTwoShape1 := v7.NewRangeQuery("id").Gte(50).Lte(500)                                  // 指代Id必须 >= 50 且 < 500
+	shouldConditionTwoShape2 := v7.NewMatchQuery("title", "沐临风")                                         // 分词查询
+	shouldConditionTwoShape3 := v7.NewTermsQuery("comment", v7.NewMatchQuery("comment.username", "沐临风")) // 精确查询
 
 	search.Must(shouldConditionTwoShape1, shouldConditionTwoShape2, shouldConditionTwoShape3)
 	/**
@@ -205,14 +206,29 @@ func TestDoSearch(t *testing.T) {
 
 	// 场景：范围区间搜素
 	search := v7.NewBoolQuery()
-	shouldConditionTwoShape1 := elastic.NewRangeQuery("id").Gte(50) // 指代Id必须 >= 50
+	shouldConditionTwoShape1 := v7.NewRangeQuery("id").Gte(50) // 指代Id必须 >= 50
 	search.Must(shouldConditionTwoShape1)
 
-	// 场景：必须满足至少一个条件
+
+	// 场景：必须满足至少一个条件 -- 时间查询
+	示例 mapping 结构
+	{
+	    "mappings":{
+	        "properties":{
+	            "online_time":{
+	                "type":"date",
+	                "format":"yyyy-MM-dd HH:mm:ss"
+	            }
+	        }
+	    }
+	}
+
 	search := v7.NewBoolQuery()
-	shouldConditionTwoShape1 := elastic.NewRangeQuery("id").Gte(50) // 指代Id必须 >= 50
-	shouldConditionTwoShape2 := elastic.NewRangeQuery("id").Gte(50) // 指代Id必须 >= 50
+	shouldConditionTwoShape1 := v7.NewRangeQuery("online_time").Gte("2022-03-01 18:35:05") // 指代时间必须大于等于 2022-03-01 18:35:05
+	shouldConditionTwoShape2 := v7.NewRangeQuery("online_time").Lt("2022-04-01 18:35:05") //  指代时间必须小于 2022-04-01 18:35:05
 	search.Must(shouldConditionTwoShape1, shouldConditionTwoShape2)
+
+
 
 	// 场景: nested 结构搜索 - 假设 目前文章评论信息是 comment 参数，其下有个 评论人 参数名是 username
 	示例 mapping 结构
@@ -239,9 +255,10 @@ func TestDoSearch(t *testing.T) {
 	    }
 	}
 	// - ES Nested结构 嵌套查询 https://czjxy881.github.io/elasticsearch/%E4%B8%80%E8%B5%B7%E6%9D%A5%E5%AD%A6ES-%E6%B5%85%E8%B0%88Nested%E7%BB%93%E6%9E%84/
-	shouldCond1 := elastic.NewNestedQuery("comment", elastic.NewMatchQuery("comment.username","沐临风")) // 分词
-	shouldCond2 := elastic.NewNestedQuery("comment", elastic.NewTermsQuery("comment.username", "沐临风")) // 完全匹配
-	search.Must(elastic.NewBoolQuery().Should(shouldCond1, shouldCond2))
+	shouldCond1 := v7.NewNestedQuery("comment", v7.NewMatchQuery("comment.username","沐临风")) // 分词
+	shouldCond2 := v7.NewNestedQuery("comment", v7.NewTermsQuery("comment.username", "沐临风")) // 完全匹配
+	search.Must(v7.NewBoolQuery().Should(shouldCond1, shouldCond2))
+
 	*/
 	// - 计算分页
 	page := 1
