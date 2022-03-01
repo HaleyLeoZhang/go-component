@@ -8,6 +8,7 @@ import (
 	v7 "github.com/olivere/elastic/v7"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -96,7 +97,7 @@ func TestRun(t *testing.T) {
 	TestDoUpsert(t)
 	<-time.After(2 * time.Second) // --- 理论上，允许 2 以内生成索引的延迟
 	TestDoSearch(t)
-	TestDoDelete(t)
+	//TestDoDelete(t)
 	// -----
 }
 
@@ -121,8 +122,8 @@ func TestIniInstance(t *testing.T) {
 	var (
 		err error
 	)
-	instance, err = NewV7(cfg.Es)
-	//instance, err = NewV7(cfg.Es, v7.SetTraceLog(new(TraceLog))) // 同时打印请求日志
+	//instance, err = NewV7(cfg.Es)
+	instance, err = NewV7(cfg.Es, v7.SetTraceLog(new(TraceLog))) // 同时打印请求日志
 	if err != nil {
 		msg := fmt.Sprintf("NewClient err(%+v)", err)
 		t.Fatal(msg)
@@ -176,7 +177,13 @@ func TestDoSearch(t *testing.T) {
 	// - 设置需要的字段
 	fields := []string{"id", "title", "describe", "category"}
 	search := v7.NewBoolQuery()
-	search.Must(v7.NewMatchQuery("describe", "画像")) // 中文分词直接用
+	//search.Must(v7.NewMatchQuery("describe", "画像")) // 中文分词直接用
+
+	shouldConditionTwoShape1 := v7.NewRangeQuery("id").Gte(50).Lte(500) // 指代Id必须 >= 50 且 < 500
+	shouldConditionTwoShape2 := v7.NewMatchQuery("title", "沐临风") // 分词查询
+	shouldConditionTwoShape3 := v7.NewTermsQuery("comment", v7.NewMatchQuery("comment.username","沐临风")) // 精确查询
+
+	search.Must(shouldConditionTwoShape1, shouldConditionTwoShape2, shouldConditionTwoShape3)
 	/**
 	// 需要避坑的： should 和 must 在同一层级的时候 must 会生效 但是 should 不会
 
@@ -187,7 +194,9 @@ func TestDoSearch(t *testing.T) {
 	// 场景：必须同时满足多个条件
 	search := v7.NewBoolQuery()
 	search.Must(v7.NewTermsQuery("id", 75, 5641))
-	search.Must(v7.NewTermsQuery("title", "goland"))
+	//search.Must(v7.NewTermsQuery("title", "goland")) // 精确匹配
+	search.Must(v7.NewMatchQuery("title", "goland")) // 分词匹配
+
 
 	// 场景：只要满足其中一个条件即可
 	search := v7.NewBoolQuery()
@@ -205,6 +214,34 @@ func TestDoSearch(t *testing.T) {
 	shouldConditionTwoShape2 := elastic.NewRangeQuery("id").Gte(50) // 指代Id必须 >= 50
 	search.Must(shouldConditionTwoShape1, shouldConditionTwoShape2)
 
+	// 场景: nested 结构搜索 - 假设 目前文章评论信息是 comment 参数，其下有个 评论人 参数名是 username
+	示例 mapping 结构
+	{
+	    "mappings":{
+	        "properties":{
+	            "comment":{
+	                "type":"nested",
+	                "properties":{
+	                    "id":{
+	                        "type":"integer"
+	                    },
+	                    "username":{
+	                        "type":"text",
+	                        "analyzer":"ik_smart",
+	                        "search_analyzer":"ik_smart"
+	                    },
+	                    "content":{
+	                        "type":"keyword"
+	                    }
+	                }
+	            }
+	        }
+	    }
+	}
+	// - ES Nested结构 嵌套查询 https://czjxy881.github.io/elasticsearch/%E4%B8%80%E8%B5%B7%E6%9D%A5%E5%AD%A6ES-%E6%B5%85%E8%B0%88Nested%E7%BB%93%E6%9E%84/
+	shouldCond1 := elastic.NewNestedQuery("comment", elastic.NewMatchQuery("comment.username","沐临风")) // 分词
+	shouldCond2 := elastic.NewNestedQuery("comment", elastic.NewTermsQuery("comment.username", "沐临风")) // 完全匹配
+	search.Must(elastic.NewBoolQuery().Should(shouldCond1, shouldCond2))
 	*/
 	// - 计算分页
 	page := 1
