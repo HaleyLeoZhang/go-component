@@ -18,7 +18,8 @@ import (
 const (
 	// 测试用的 es 对应 mapping ---- 这个 Mapping 需要有 ik 分词器
 	// --- 安装 ik 分词插件 elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.5.1/elasticsearch-analysis-ik-7.5.1.zip
-	// --- Elasticsearch7.x 字段数据类型  https://www.cnblogs.com/xiaofeng-fu/p/13596725.html
+	// --- ElasticSearch7.x 字段数据类型  https://www.cnblogs.com/xiaofeng-fu/p/13596725.html
+	// --- ElasticSearch 八股文 - 学习阶段 https://zhuanlan.zhihu.com/p/102500311
 	TestMapping = `
 {
 	"settings":{
