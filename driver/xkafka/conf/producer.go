@@ -15,7 +15,7 @@ type Producer struct {
 
 type ProducerRetry struct {
 	Max     int           `yaml:"max"`
-	Backoff time.Duration `yaml:"back_off"`
+	Backoff time.Duration `yaml:"backoff"`
 }
 
 type Return struct {

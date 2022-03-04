@@ -18,7 +18,7 @@ kafka:
   metadata: #对producer和consumer设置的元数据
     retry: #重试
       max: 3 #发送元数据请求的最大数量
-      back_off: 250ms #在重试前等待leader选举的最多等待时间
+      backoff: 250ms #在重试前等待leader选举的最多等待时间
     refresh_frequency: 10s #刷新元数据的频率
     full: true #是否维护所有topic的原数据
     timeout: 10s #等待元数据相应的最大等待时间
@@ -42,7 +42,7 @@ kafka:
       max: 0 #单次请求的最大字节数 0代表无限制
       default: 1048576 # 单次请求的默认字节数 1024*1024
     retry: #重试设置
-      back_off: 2s #从partition获取消息时候后等待的时间
+      backoff: 2s #从partition获取消息时候后等待的时间
     return: #返回设置
       errors: true #是否将失败的消息发送到 errors channel
     offsets: #对于 consumer offset设置
@@ -60,7 +60,7 @@ kafka:
         timeout: 60s # 重新分配的超时时间，超过则会被移除
         retry: # 重新分配的尝试次数
           max: 3 # 最大次数
-          back_off: 2s # 在重新分配之前的等待时间
+          backoff: 2s # 在重新分配之前的等待时间
   client_id: email_server #client_id 根据自己应用进行设置
   channel_buffer_size: 1024 # 所有的channel的长度
   version: 9 #版本设置 建议选择低于现在的版本

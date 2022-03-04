@@ -11,5 +11,5 @@ type Metadata struct {
 
 type MetadataRetry struct {
 	Max     int           `yaml:"max"`
-	Backoff time.Duration `yaml:"back_off"`
+	Backoff time.Duration `yaml:"backoff"`
 }

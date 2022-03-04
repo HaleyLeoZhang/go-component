@@ -21,7 +21,7 @@ type Group struct {
 }
 
 type ConsumerRetry struct {
-	Backoff time.Duration `yaml:"back_off"`
+	Backoff time.Duration `yaml:"backoff"`
 }
 
 type Fetch struct {
@@ -71,5 +71,5 @@ type Rebalance struct {
 
 type RebalanceRetry struct {
 	Max     int           `yaml:"max"`
-	Backoff time.Duration `yaml:"back_off"`
+	Backoff time.Duration `yaml:"backoff"`
 }
