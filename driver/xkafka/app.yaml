@@ -64,4 +64,4 @@ kafka:
   client_id: email_server #client_id 根据自己应用进行设置
   channel_buffer_size: 1024 # 所有的channel的长度
   version: 9 #版本设置 建议选择低于现在的版本
-  brokers_addr: [10.180.18.60:9092] #brokers 地址
+  brokers_addr: [kafka.local.ops:9092] #brokers 地址
