@@ -67,12 +67,52 @@ func (g *GroupConsumer) Setup(x sarama.ConsumerGroupSession) error {
 	}
 	return nil
 }
+// 消息处理开启前 清空错误，绑定错误监听
+func (g *GroupConsumer) setupHandler(sess sarama.ConsumerGroupSession) error {
+	// Drain the errors first
+	g.drainErrors()
+	go func(errs <-chan error, cancel context.CancelFunc) {
+		// Exit the current claim consume loop
+		defer cancel()
+		for {
+			select {
+			case err, ok := <-errs:
+				if !ok {
+					return
+				}
+				xlog.Info(err)
+				if e, ok := err.(*sarama.ConsumerError); ok {
+					switch e.Err {
+					case sarama.ErrUnknownMemberId:
+						xlog.Errorf("The consumer ErrUnknownMemberId Topic(%v) consumerGroup(%v)", g.topics, g.group)
+						return
+					case sarama.ErrRebalanceInProgress:
+						xlog.Errorf("The consumer ErrRebalanceInProgress Topic(%v) consumerGroup(%v)", g.topics, g.group)
+						return
+					}
+				}
+			case <-g.ctx.Done():
+				return
+			}
+		}
+	}(g.Errors(), g.cancel)
+	return nil
+}
 
 func (g *GroupConsumer) Cleanup(x sarama.ConsumerGroupSession) error {
 	if g.cleanup != nil {
 		return g.cleanup(x)
 	}
 
+	return nil
+}
+
+// 消费loop中止 触发消息处理中止,清空错误信息
+func (g *GroupConsumer) cleanupHandler(sess sarama.ConsumerGroupSession) error {
+	if g.cancel != nil {
+		g.cancel()
+	}
+	g.drainErrors()
 	return nil
 }
 
@@ -84,6 +124,19 @@ func (g *GroupConsumer) RegisterHandler(handler GroupConsumerHandler) {
 //注册Cleanup handler
 func (g *GroupConsumer) RegisterCleanupHandler(handler GroupConsumerSessionHandler) {
 	g.cleanup = handler
+}
+
+func (g *GroupConsumer) drainErrors() {
+	for {
+		select {
+		case _, ok := <-g.Errors():
+			if !ok {
+				return
+			}
+		default:
+			return
+		}
+	}
 }
 
 //注册Setup handler

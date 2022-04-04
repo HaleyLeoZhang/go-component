@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/HaleyLeoZhang/go-component/driver/xlog"
-	"github.com/HaleyLeoZhang/go-component/errgroup"
 	"github.com/Shopify/sarama"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -43,6 +42,8 @@ func InitConfig() {
 	}
 }
 
+const TopicName = "email_tester"
+
 type TestSmtp struct {
 	Subject      string   `json:"subject"`
 	SenderName   string   `json:"sender_name"`
@@ -55,42 +56,31 @@ type TestSmtp struct {
 
 // 消费者组测试
 func TestConsumer(t *testing.T) {
-	consumerGroup := "email_consumer"
-	topicList := []string{"biz_email"}
-	d := NewConsumer(config.Kafka, topicList, consumerGroup)
-	d.Consumer.RegisterHandler(handlerExampleStart)
-	err := d.Consumer.Start() // 请注意：内部消息者是异步的，此方法不会产生阻塞
+	ctx, cancel := context.WithCancel(context.Background())
+	err := StartKafkaConsumer(ctx, ConsumerOption{
+		Conf:        config.Kafka,          // Kafka 配置
+		Topic:       []string{TopicName}, // 消费Topic列表
+		Group:       "email_consumer",      // Consumer group name
+		Batch:       10,                    // 每次拉取的消息数
+		Procs:       2,                     // 并发处理消息的数量
+		PollTimeout: 3 * time.Second,
+		Handler:     testHandler, // 处理单条消息的函数
+		Mode:        ModeBatch,   // 消费模式
+	})
 	if err != nil {
-		xlog.Errorf("handlerExampleStart  Err(%+v)", err)
+		t.Fatalf("%+v", err)
 	}
 	// 因为上面 Start() 方法不阻塞，为了消费者正常消费，请不要让主进程退出
-	a := make(chan int)
-	<-a
+	xlog.Infof("consumer going to shutdown")
+	<- time.After(1*time.Minute)
+	cancel()
+	<- time.After(4*time.Second)
 	xlog.Infof("consumer done")
 }
 
-func handlerExampleStart(session *ConsumerSession, msgs <-chan *sarama.ConsumerMessage) (errKafka error) {
-	//s.wg.Add(1)
-	//defer s.wg.Done() // 杀进程的时候，等待下面停止消费
-	fun := IteratorBatchFetch(session, msgs, 10, 1)
-	for {
-		kafkaMessages, ok := fun()
-		if !ok {
-			xlog.Infof("ok(%v)", ok)
-			return
-		}
-		messages := mergeEmailMessageHandler(kafkaMessages)
-		eg := &errgroup.Group{}
-		eg.GOMAXPROCS(1)
-		for _, business := range messages {
-			tmp := business
-			eg.Go(func(context.Context) error {
-				xlog.Infof("当前数据 (%v)", tmp)
-				return nil
-			})
-		}
-		_ = eg.Wait()
-	}
+func testHandler(ctx context.Context, message *sarama.ConsumerMessage) error {
+	xlog.Infof("message(%v)", string(message.Value))
+	return nil
 }
 
 // 消息转对应结构体--并去重
@@ -111,7 +101,7 @@ func mergeEmailMessageHandler(msgs []*sarama.ConsumerMessage) (batchList []*Test
 
 // 生产者测试
 func TestProducer(t *testing.T) {
-	testTopic := "biz_email"
+	testTopic := TopicName
 	d := NewProducer(config.Kafka)
 	one := &TestSmtp{}
 	one.SenderName = "测试同步"
