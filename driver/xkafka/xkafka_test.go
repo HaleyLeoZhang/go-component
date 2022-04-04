@@ -58,11 +58,11 @@ type TestSmtp struct {
 func TestConsumer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	err := StartKafkaConsumer(ctx, ConsumerOption{
-		Conf:        config.Kafka,          // Kafka 配置
+		Conf:        config.Kafka,        // Kafka 配置
 		Topic:       []string{TopicName}, // 消费Topic列表
-		Group:       "email_consumer",      // Consumer group name
-		Batch:       10,                    // 每次拉取的消息数
-		Procs:       2,                     // 并发处理消息的数量
+		Group:       "email_consumer",    // Consumer group name
+		Batch:       10,                  // 每次拉取的消息数
+		Procs:       2,                   // 并发处理消息的数量
 		PollTimeout: 3 * time.Second,
 		Handler:     testHandler, // 处理单条消息的函数
 		Mode:        ModeBatch,   // 消费模式
@@ -72,14 +72,14 @@ func TestConsumer(t *testing.T) {
 	}
 	// 因为上面 Start() 方法不阻塞，为了消费者正常消费，请不要让主进程退出
 	xlog.Infof("consumer going to shutdown")
-	<- time.After(1*time.Minute)
+	<-time.After(1 * time.Minute)
 	cancel()
-	<- time.After(4*time.Second)
+	<-time.After(4 * time.Second)
 	xlog.Infof("consumer done")
 }
 
 func testHandler(ctx context.Context, message *sarama.ConsumerMessage) error {
-	xlog.Infof("message(%v)", string(message.Value))
+	xlog.Infof("offset(%v) message(%v) ", message.Offset, string(message.Value))
 	return nil
 }
 
