@@ -74,7 +74,6 @@ func TestConsumer(t *testing.T) {
 	xlog.Infof("consumer going to shutdown")
 	<-time.After(1 * time.Minute)
 	cancel()
-	<-time.After(4 * time.Second)
 	xlog.Infof("consumer done")
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/HaleyLeoZhang/go-component/errgroup"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -72,6 +73,12 @@ func StartKafkaConsumer(ctx context.Context, option ConsumerOption) (err error) 
 	if err != nil {
 		return
 	}
+	go func() {
+		<-d.ctx.Done()
+		infoTmp := fmt.Sprintf("Stop Kafka Group(%v) Topic(%v)", d.Consumer.group, strings.Join(d.Consumer.topics, ","))
+		fmt.Println(infoTmp)
+		_ = d.Consumer.Close()
+	}()
 	return
 }
 
