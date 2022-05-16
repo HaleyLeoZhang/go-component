@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -56,6 +57,7 @@ type TestSmtp struct {
 
 // 消费者组测试
 func TestConsumer(t *testing.T) {
+	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	err := StartKafkaConsumer(ctx, ConsumerOption{
 		Conf:        config.Kafka,        // Kafka 配置
@@ -66,14 +68,19 @@ func TestConsumer(t *testing.T) {
 		PollTimeout: 3 * time.Second,
 		Handler:     testHandler, // 处理单条消息的函数
 		Mode:        ModeBatch,   // 消费模式
+		// 平滑关闭
+		WaitGroup: wg,
 	})
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	// 因为上面 Start() 方法不阻塞，为了消费者正常消费，请不要让主进程退出
 	xlog.Infof("consumer going to shutdown")
-	<-time.After(1 * time.Minute)
+	//<-time.After(1 * time.Minute)
+	<-time.After(10 * time.Second)
 	cancel()
+	xlog.Infof("waiting close")
+	wg.Wait() // 等待消费者关闭
 	xlog.Infof("consumer done")
 }
 

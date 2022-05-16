@@ -8,6 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -42,6 +43,8 @@ type ConsumerOption struct {
 	Handler     Handler       // 处理单条消息的函数
 	Mode        ConsumeMode   // 消费模式
 	//PreHandler  *GroupConsumerHandler             // 预处理消息的函数: 合并消息，然后分组去重等场景 TODO
+	// - 平滑关闭
+	WaitGroup *sync.WaitGroup // 外部传入 waitGroup 锁，可以使其消费者平滑关闭
 }
 
 // 初始化并开启消费者
@@ -52,6 +55,9 @@ func StartKafkaConsumer(ctx context.Context, option ConsumerOption) (err error) 
 	}
 	if len(option.Group) == 0 {
 		return errors.WithStack(fmt.Errorf("consumerGroup不能为空"))
+	}
+	if  option.WaitGroup != nil{
+		option.WaitGroup.Add(1)
 	}
 	d := &Consumer{
 		ctx:    ctx,
@@ -78,6 +84,9 @@ func StartKafkaConsumer(ctx context.Context, option ConsumerOption) (err error) 
 		infoTmp := fmt.Sprintf("Stop Kafka Group(%v) Topic(%v)", d.Consumer.group, strings.Join(d.Consumer.topics, ","))
 		fmt.Println(infoTmp)
 		_ = d.Consumer.Close()
+		if  option.WaitGroup != nil{
+			option.WaitGroup.Done()
+		}
 	}()
 	return
 }
