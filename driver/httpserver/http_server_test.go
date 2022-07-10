@@ -44,7 +44,7 @@ func metricsTest() {
 		Name:      "buckets",
 		Help:      "响应时间，毫秒",
 		Buckets:   []float64{10, 25, 50, 100, 150, 200, 300, 500, 1000, 3000},
-	}, []string{"service", "action"})
+	}, []string{"router"})
 	// - 注册指标
 	prometheus.MustRegister(httpMsMetrics)
 	//reg := prometheus.NewRegistry()
@@ -54,7 +54,7 @@ func metricsTest() {
 		var f = float64(i + 50)
 		go func() {
 			<-time.After(2 * time.Second)
-			httpMsMetrics.WithLabelValues("api").Observe(f)
+			httpMsMetrics.WithLabelValues("comic/detail_by_id").Observe(f)
 		}()
 	}
 	fmt.Println("Case 1 --- 分桶计数  Start")
