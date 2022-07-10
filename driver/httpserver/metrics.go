@@ -7,7 +7,7 @@ import (
 
 // Prometheus Exporter
 func WrapPrometheus(router *gin.Engine) {
-	router.GET("/metrics", func(*gin.Context) {
-		promhttp.Handler()
+	router.GET("/metrics", func(ctx *gin.Context) {
+		promhttp.Handler().ServeHTTP(ctx.Writer, ctx.Request)
 	})
 }

@@ -1,10 +1,11 @@
 package httpserver
 
 import (
+	"fmt"
 	"github.com/HaleyLeoZhang/go-component/driver/xgin"
+	"github.com/HaleyLeoZhang/go-component/driver/xmetric"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
-	"math"
 	"testing"
 	"time"
 )
@@ -18,11 +19,6 @@ func TestRun(t *testing.T) {
 	ginEngine.GET("/ping", func(ctx *gin.Context) {
 		ctx.String(200, "pong")
 	})
-	// 尝试写入
-	ginEngine.GET("/write", func(ctx *gin.Context) {
-		addMetrics()
-		ctx.String(200, "pong")
-	})
 
 	c2 := &Config{}
 	c2.Metrics = true
@@ -30,22 +26,45 @@ func TestRun(t *testing.T) {
 	c2.Name = "testHttp"
 	c2.Ip = "0.0.0.0"
 	c2.Port = 80
+
+	// 启动前注册指标
+	if c2.Metrics {
+		metricsTest()
+	}
+
 	Run(c2, ginEngine)
 }
 
-func addMetrics() {
-	const NAMESPACE = "test"
-	var httpMs = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: NAMESPACE,
-		Name:      "http_response_ms",
+func metricsTest() {
+	// 启动前注册指标
+	// Case 1 --- 分桶计数
+	var httpMsMetrics = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "__http_buckets",
+		Subsystem: "",
+		Name:      "buckets",
 		Help:      "响应时间，毫秒",
-		Buckets:   []float64{50, 100, 200, 300, 500, 1000, 3000},
+		Buckets:   []float64{10, 25, 50, 100, 150, 200, 300, 500, 1000, 3000},
 	}, []string{"service", "action"})
-
+	// - 注册指标
+	prometheus.MustRegister(httpMsMetrics)
+	//reg := prometheus.NewRegistry()
+	//reg.MustRegister(httpMs)
+	// - bucket 打点
 	for i := 0; i < 1000; i++ {
-		httpMs.WithLabelValues("comic_service", "api").Observe(50 + math.Floor(120*math.Sin(float64(i)*0.1))/10)
+		var f = float64(i + 50)
+		go func() {
+			<-time.After(2 * time.Second)
+			httpMsMetrics.WithLabelValues("api").Observe(f)
+		}()
 	}
-
-	reg := prometheus.NewRegistry()
-	reg.MustRegister(httpMs)
+	fmt.Println("Case 1 --- 分桶计数  Start")
+	// Case 2 增长情况
+	// 业务指标
+	for i := 0; i < 324; i++ {
+		go func() {
+			<-time.After(2 * time.Second)
+			xmetric.MetricProducer.WithLabelValues("blog_search").Inc() // 使用现成指标
+		}()
+	}
+	fmt.Println("Case 2 --- 增长情况  Start")
 }
