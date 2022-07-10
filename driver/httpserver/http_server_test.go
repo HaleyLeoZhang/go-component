@@ -6,33 +6,47 @@ import (
 	"github.com/HaleyLeoZhang/go-component/driver/xmetric"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 	"time"
 )
 
+type TestConfig struct {
+	HttpServer *Config      `yaml:"httpServer"`
+	Gin        *xgin.Config `yaml:"gin"`
+}
+
+var (
+	cfg = &TestConfig{}
+)
+
 func TestRun(t *testing.T) {
-	c := &xgin.Config{}
-	c.Debug = true
-	c.Name = "testHttp"
-	c.Timeout = 3 * time.Second
-	ginEngine := xgin.New(c)
+	var yamlFile string
+	yamlFile, err := filepath.Abs("./app.yaml") // 示例的kafka配置文件请看这个文件
+	if err != nil {
+		panic(err)
+	}
+	yamlRead, err := ioutil.ReadFile(yamlFile)
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.Unmarshal(yamlRead, cfg)
+	if err != nil {
+		panic(err)
+	}
+	// --
+	ginEngine := xgin.New(cfg.Gin)
 	ginEngine.GET("/ping", func(ctx *gin.Context) {
 		ctx.String(200, "pong")
 	})
-
-	c2 := &Config{}
-	c2.Metrics = true
-	c2.Pprof = true
-	c2.Name = "testHttp"
-	c2.Ip = "0.0.0.0"
-	c2.Port = 80
-
 	// 启动前注册指标
-	if c2.Metrics {
+	if cfg.HttpServer.Metrics {
 		metricsTest()
 	}
 
-	Run(c2, ginEngine)
+	Run(cfg.HttpServer, ginEngine)
 }
 
 func metricsTest() {
