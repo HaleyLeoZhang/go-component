@@ -12,7 +12,10 @@ type Config struct {
 	Name           string        `yaml:"name" json:"name"` // 用于 Trace 识别
 	Ip             string        `yaml:"ip" json:"ip"`
 	Port           int           `yaml:"port" json:"port"`
-	Pprof          bool          `yaml:"pprof" json:"pprof"` // true 开启  pprof 性能监控路由
+	Pprof          bool          `yaml:"pprof" json:"pprof"`     // true 开启  pprof 性能监控路由
+	// 注: 网关层请不要让外部访问到 /metrics 这个路由
+	Metrics        bool          `yaml:"metrics" json:"metrics"` // true 开启  metrics 打点，支持 prometheus 主动来拉数据
+	// -
 	ReadTimeout    time.Duration `yaml:"readTimeout" json:"readTimeout"`
 	WriteTimeout   time.Duration `yaml:"writeTimeout" json:"writeTimeout"`
 	MaxHeaderBytes int           `yaml:"maxHeaderBytes" json:"maxHeaderBytes"`
@@ -25,6 +28,11 @@ func Run(c *Config, routersInit *gin.Engine) {
 		// pprof 相关说明 http://www.hlzblog.top/article/74.html
 		xlog.Info("Enabled pprof")
 		Wrap(routersInit)
+	}
+	if c.Metrics {
+		// prometheus 相关说明 https://prometheus.io/docs/guides/go-application/
+		xlog.Info("Enabled metrics")
+		WrapPrometheus(routersInit)
 	}
 
 	server := &http.Server{
