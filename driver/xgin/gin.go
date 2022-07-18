@@ -24,7 +24,9 @@ func New(c *Config) *gin.Engine {
 	timeout = c.Timeout
 
 	r := gin.New()
-	r.Use(gin.Logger())
+	if true == c.Debug {
+		r.Use(gin.Logger())
+	}
 	r.Use(HttpMetrics()) // 默认 Metrics 打点
 	//r.Use(gin.Recovery()) // 外部 recovery
 	return r

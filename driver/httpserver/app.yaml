@@ -9,5 +9,5 @@ httpServer:
 
 gin:
   name: go_component_unit
-  debug: true
+  debug: false
   timeout: 3s
