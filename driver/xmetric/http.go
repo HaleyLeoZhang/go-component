@@ -17,7 +17,7 @@ var (
 	}, []string{"method", "path"})
 
 	MetricHttpRequestCount = NewCounterVec(&prometheus.CounterOpts{
-		Namespace: _metricNamespaceForCache,
+		Namespace: _metricNamespaceForHttp,
 		Subsystem: "",
 		Name:      "request_total",
 		Help:      "http requests  total.",
