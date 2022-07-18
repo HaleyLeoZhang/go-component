@@ -16,7 +16,6 @@ type Gin struct {
 	Cancel     context.CancelFunc
 }
 
-
 func New(c *Config) *gin.Engine {
 	gin.SetMode("release")
 	if true == c.Debug {
@@ -26,6 +25,7 @@ func New(c *Config) *gin.Engine {
 
 	r := gin.New()
 	r.Use(gin.Logger())
+	r.Use(HttpMetrics()) // 默认 Metrics 打点
 	//r.Use(gin.Recovery()) // 外部 recovery
 	return r
 }
