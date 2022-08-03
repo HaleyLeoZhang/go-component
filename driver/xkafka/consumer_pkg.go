@@ -7,6 +7,7 @@ import (
 	"github.com/Shopify/sarama"
 	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -67,6 +68,7 @@ func (g *GroupConsumer) Setup(x sarama.ConsumerGroupSession) error {
 	}
 	return nil
 }
+
 // 消息处理开启前 清空错误，绑定错误监听
 func (g *GroupConsumer) setupHandler(sess sarama.ConsumerGroupSession) error {
 	// Drain the errors first
@@ -178,6 +180,7 @@ func (g *GroupConsumer) Start() (err error) {
 			xlog.Infof("Listening Kafka Group(%v) Topic(%v)", g.group, strings.Join(g.topics, ","))
 			if err := g.consumer.Consume(g.ctx, g.topics, g); err != nil {
 				xlog.Errorf("Error from consumer: %v", err)
+				<-time.After(1 * time.Second) // 防止重试太快
 				continue
 			}
 			if g.ctx.Err() != nil {

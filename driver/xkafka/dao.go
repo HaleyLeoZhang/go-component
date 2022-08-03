@@ -56,7 +56,7 @@ func StartKafkaConsumer(ctx context.Context, option ConsumerOption) (err error) 
 	if len(option.Group) == 0 {
 		return errors.WithStack(fmt.Errorf("consumerGroup不能为空"))
 	}
-	if  option.WaitGroup != nil{
+	if option.WaitGroup != nil {
 		option.WaitGroup.Add(1)
 	}
 	d := &Consumer{
@@ -84,7 +84,7 @@ func StartKafkaConsumer(ctx context.Context, option ConsumerOption) (err error) 
 		infoTmp := fmt.Sprintf("Stop Kafka Group(%v) Topic(%v)", d.Consumer.group, strings.Join(d.Consumer.topics, ","))
 		fmt.Println(infoTmp)
 		_ = d.Consumer.Close()
-		if  option.WaitGroup != nil{
+		if option.WaitGroup != nil {
 			option.WaitGroup.Done()
 		}
 	}()
@@ -93,9 +93,8 @@ func StartKafkaConsumer(ctx context.Context, option ConsumerOption) (err error) 
 
 // 批量消费模型
 func (d *Consumer) handleBatch(session *ConsumerSession, msgs <-chan *sarama.ConsumerMessage) (errKafka error) {
-	fun := iteratorBatchFetch(session, msgs, d.option.Batch, d.option.PollTimeout)
 	for {
-		messages, ok := fun()
+		messages, ok := iteratorBatchFetch(d.ctx, session, msgs, d.option.Batch, d.option.PollTimeout)
 		if !ok {
 			return
 		}

@@ -77,7 +77,7 @@ func TestConsumer(t *testing.T) {
 	// 因为上面 Start() 方法不阻塞，为了消费者正常消费，请不要让主进程退出
 	xlog.Infof("consumer going to shutdown")
 	//<-time.After(1 * time.Minute)
-	<-time.After(10 * time.Second)
+	<-time.After(1 * time.Minute)
 	cancel()
 	xlog.Infof("waiting close")
 	wg.Wait() // 等待消费者关闭
