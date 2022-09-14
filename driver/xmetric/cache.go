@@ -7,12 +7,10 @@ const _metricNamespaceForCache = "cache"
 // 本文件功能: 记录命中未命中情况
 
 var (
-	// 示例 promSQL  以15秒为时间间隔，采集数据，计算每个段内的命中率
-	// avg(
-	//	cache_hit_total{job="mlf-k8s-prd-pods"}[15s] / (
-	//		cache_hit_total{job="mlf-k8s-prd-pods"}[15s] + cache_miss_total{job="mlf-k8s-prd-pods"}[15s]
-	//	)
-	//) by (name)
+	// 示例 promSQL  以15秒为时间间隔，采集数据，计算每分钟缓存命中率
+	// increase(cache_hit_total{job="$application"}[1m])  / (
+	//    increase(cache_hit_total{job="$application"}[1m])  + increase(cache_miss_total{job="$application"}[1m])
+	//) * 100
 
 	MetricHit = NewCounterVec(&prometheus.CounterOpts{
 		Namespace: _metricNamespaceForCache,
