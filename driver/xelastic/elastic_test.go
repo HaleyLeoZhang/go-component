@@ -184,8 +184,8 @@ func TestDoSearch(t *testing.T) {
 	shouldConditionTwoShape1 := v7.NewRangeQuery("id").Gte(50).Lte(500)                                  // 指代Id必须 >= 50 且 < 500
 	shouldConditionTwoShape2 := v7.NewMatchQuery("title", "沐临风")                                         // 分词查询
 	shouldConditionTwoShape3 := v7.NewTermsQuery("comment", v7.NewMatchQuery("comment.username", "沐临风")) // 精确查询
-
-	search.Must(shouldConditionTwoShape1, shouldConditionTwoShape2, shouldConditionTwoShape3)
+	mustShould := v7.NewBoolQuery().Should(shouldConditionTwoShape1, shouldConditionTwoShape2, shouldConditionTwoShape3)
+	search.Must(mustShould)
 	/**
 	// 需要避坑的： should 和 must 在同一层级的时候 must 会生效 但是 should 不会
 
@@ -227,7 +227,8 @@ func TestDoSearch(t *testing.T) {
 	search := v7.NewBoolQuery()
 	shouldConditionTwoShape1 := v7.NewRangeQuery("online_time").Gte("2022-03-01 18:35:05") // 指代时间必须大于等于 2022-03-01 18:35:05
 	shouldConditionTwoShape2 := v7.NewRangeQuery("online_time").Lt("2022-04-01 18:35:05") //  指代时间必须小于 2022-04-01 18:35:05
-	search.Must(shouldConditionTwoShape1, shouldConditionTwoShape2)
+	mustShould := v7.NewBoolQuery().Should(shouldConditionTwoShape1, shouldConditionTwoShape2)
+	search.Must(mustShould)
 
 
 
