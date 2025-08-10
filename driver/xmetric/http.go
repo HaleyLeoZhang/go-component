@@ -14,7 +14,7 @@ var (
 		Name:      "response_ms",
 		Help:      "http requests duration",
 		Buckets:   []float64{10, 25, 50, 100, 150, 200, 300, 500, 1000, 3000},
-	}, []string{"method", "path"})
+	}, []string{"method", "path", "http_status"})
 
 	MetricHttpRequestCount = NewCounterVec(&prometheus.CounterOpts{
 		Namespace: _metricNamespaceForHttp,

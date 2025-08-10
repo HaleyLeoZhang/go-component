@@ -1,6 +1,6 @@
 package xlog
 
 const (
-	STDOUT_YES bool = true
-	STDOUT_NO  bool = false
+	StdoutYes bool = true
+	StdoutNo  bool = false
 )
