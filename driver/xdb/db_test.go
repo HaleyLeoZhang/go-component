@@ -1,9 +1,9 @@
-package db
+package xdb
 
 import (
 	"context"
 	"github.com/HaleyLeoZhang/go-component/driver/xlog"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"os"
 	"testing"
 )

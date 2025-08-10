@@ -109,7 +109,7 @@ func (d *Consumer) handleBatch(session *ConsumerSession, msgs <-chan *sarama.Con
 		}
 		err := eg.Wait()
 		if err != nil {
-			xlog.Errorf("kafka consumer Error(%+v)", err)
+			xlog.Errorf(d.ctx, "kafka consumer Error(%+v)", err)
 		}
 	}
 }

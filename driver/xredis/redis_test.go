@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 
 func InitConfig() {
 	var yamlFile string
-	yamlFile, err := filepath.Abs("./app.yaml") // 示例的kafka配置文件请看这个文件
+	yamlFile, err := filepath.Abs("./app.yml") // 示例的kafka配置文件请看这个文件
 	if err != nil {
 		panic(err)
 	}

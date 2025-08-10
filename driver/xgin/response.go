@@ -1,8 +1,10 @@
 package xgin
 
 import (
-	"github.com/HaleyLeoZhang/go-component/driver/xlog"
+	"context"
 	"net/http"
+
+	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 )
 
 // ---------------------------------------------------------------------
@@ -29,7 +31,7 @@ type ResponseModel struct {
 }
 
 // HTTP 响应模型
-func (o *Gin) Response(err error, data interface{}) {
+func (o *Gin) Response(ctx context.Context, err error, data interface{}) {
 	code := HTTP_RESPONSE_CODE_SUCCESS
 	message := ""
 	if err != nil {
@@ -39,12 +41,12 @@ func (o *Gin) Response(err error, data interface{}) {
 			code = businessError.Code
 			message = businessError.Message
 			data = nil
-			xlog.Infof("Response BusinessError(%+v)", err)
+			xlog.Infof(ctx, "Response BusinessError(%+v)", err)
 		default:
 			code = HTTP_RESPONSE_CODE_UNKNOWN_FAIL
 			message = "服务繁忙"
 			data = nil
-			xlog.Errorf("Response Error(%+v)", err)
+			xlog.Errorf(ctx, "Response Error(%+v)", err)
 		}
 	}
 	o.GinContext.JSON(http.StatusOK, ResponseModel{

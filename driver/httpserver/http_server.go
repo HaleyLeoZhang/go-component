@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"fmt"
 	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 	"github.com/gin-gonic/gin"
@@ -9,12 +10,12 @@ import (
 )
 
 type Config struct {
-	Name           string        `yaml:"name" json:"name"` // 用于 Trace 识别
-	Ip             string        `yaml:"ip" json:"ip"`
-	Port           int           `yaml:"port" json:"port"`
-	Pprof          bool          `yaml:"pprof" json:"pprof"`     // true 开启  pprof 性能监控路由
+	Name  string `yaml:"name" json:"name"` // 用于 Trace 识别
+	Ip    string `yaml:"ip" json:"ip"`
+	Port  int    `yaml:"port" json:"port"`
+	Pprof bool   `yaml:"pprof" json:"pprof"` // true 开启  pprof 性能监控路由
 	// 注: 网关层请不要让外部访问到 /metrics 这个路由
-	Metrics        bool          `yaml:"metrics" json:"metrics"` // true 开启  metrics 打点，支持 prometheus 主动来拉数据
+	Metrics bool `yaml:"metrics" json:"metrics"` // true 开启  metrics 打点，支持 prometheus 主动来拉数据
 	// -
 	ReadTimeout    time.Duration `yaml:"readTimeout" json:"readTimeout"`
 	WriteTimeout   time.Duration `yaml:"writeTimeout" json:"writeTimeout"`
@@ -24,14 +25,16 @@ type Config struct {
 func Run(c *Config, routersInit *gin.Engine) {
 	addrString := fmt.Sprintf("%s:%v", c.Ip, c.Port)
 
+	ctx := context.Background()
+
 	if c.Pprof {
 		// pprof 相关说明 http://www.hlzblog.top/article/74.html
-		xlog.Info("Enabled pprof")
+		xlog.Info(ctx, "Enabled pprof")
 		Wrap(routersInit)
 	}
 	if c.Metrics {
 		// prometheus 相关说明 https://prometheus.io/docs/guides/go-application/
-		xlog.Info("Enabled metrics")
+		xlog.Info(ctx, "Enabled metrics")
 		WrapPrometheus(routersInit)
 	}
 
@@ -42,9 +45,9 @@ func Run(c *Config, routersInit *gin.Engine) {
 		WriteTimeout:   c.WriteTimeout,
 		MaxHeaderBytes: c.MaxHeaderBytes,
 	}
-	xlog.Infof("Start http server listening %s", addrString)
+	xlog.Infof(ctx, "Start http server listening %s", addrString)
 	err := server.ListenAndServe()
 	if err != nil {
-		xlog.Errorf("HttpServer.Err %+v", err)
+		xlog.Errorf(ctx, "HttpServer.Err %+v", err)
 	}
 }

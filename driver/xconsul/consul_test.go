@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 
 func loadConfig() (err error) {
 	var yamlFile string
-	yamlFile, err = filepath.Abs("./app.yaml")
+	yamlFile, err = filepath.Abs("./app.yml")
 	if err != nil {
 		return
 	}

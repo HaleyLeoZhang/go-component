@@ -1,6 +1,7 @@
 package xrabbitmq
 
 import (
+	"context"
 	"fmt"
 	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 	"github.com/pkg/errors"
@@ -51,17 +52,18 @@ func (a *AMQP) Push(exchange string, routingKey string, payload []byte) error {
 
 func (a *AMQP) Pull(callback func([]byte) error) error {
 	conn := a.Conn
+	ctx := context.Background()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		xlog.Errorf("RabbitMq Channel Err(%+v) Exchange(%v) Queue(%v)", err, a.Exchange, a.Queue)
+		xlog.Errorf(ctx, "RabbitMq Channel Err(%+v) Exchange(%v) Queue(%v)", err, a.Exchange, a.Queue)
 		return err
 	}
 	defer ch.Close()
 
 	err = ch.Qos(a.PullLimit, 0, false)
 	if err != nil {
-		xlog.Errorf("RabbitMq Channel Qos Err(%+v) Exchange(%v) Queue(%v)", err, a.Exchange, a.Queue)
+		xlog.Errorf(ctx, "RabbitMq Channel Qos Err(%+v) Exchange(%v) Queue(%v)", err, a.Exchange, a.Queue)
 		return err
 	}
 
@@ -97,7 +99,7 @@ func (a *AMQP) Pull(callback func([]byte) error) error {
 			go func() {
 				defer func() {
 					if r := recover(); r != nil {
-						xlog.Errorf("Panic r(%+v)", r)
+						xlog.Errorf(ctx, "Panic r(%+v)", r)
 					}
 				}()
 				a.wg.Add(1)
@@ -112,30 +114,32 @@ func (a *AMQP) Pull(callback func([]byte) error) error {
 
 func (a *AMQP) handle(d amqp.Delivery, callback func([]byte) error, pool chan int) error {
 	err := callback(d.Body)
+	ctx := context.Background()
 
 	defer func() {
 		<-pool
 	}()
 	if err != nil {
-		xlog.Errorf("RabbitMq Callback Err(%+v) Exchange(%v) Queue(%v) Body(%v)", err, a.Exchange, a.Queue, string(d.Body))
+		xlog.Errorf(ctx, "RabbitMq Callback Err(%+v) Exchange(%v) Queue(%v) Body(%v)", err, a.Exchange, a.Queue, string(d.Body))
 		return err
 	}
 
 	err = d.Ack(false)
 	if err != nil {
-		xlog.Errorf("RabbitMq Ack Err(%+v) Exchange(%v) Queue(%v) Body(%v)", err, a.Exchange, a.Queue, string(d.Body))
+		xlog.Errorf(ctx, "RabbitMq Ack Err(%+v) Exchange(%v) Queue(%v) Body(%v)", err, a.Exchange, a.Queue, string(d.Body))
 		return err
 	}
-	xlog.Infof("RabbitMq Consumer success Exchange(%v) Queue(%v) Body(%v)", a.Exchange, a.Queue, string(d.Body))
+	xlog.Infof(ctx, "RabbitMq Consumer success Exchange(%v) Queue(%v) Body(%v)", a.Exchange, a.Queue, string(d.Body))
 	return nil
 }
 
 func (a *AMQP) Start() error {
+	ctx := context.Background()
 	dial := fmt.Sprintf("amqp://%v:%v@%v:%v/", a.Conf.UserName, a.Conf.Password, a.Conf.Host, a.Conf.Port)
 	iniConn, err := amqp.Dial(dial)
 
 	if err != nil {
-		xlog.Errorf("RabbitMq Connect Err(%+v) Conf(%+v)", err, a.Conf)
+		xlog.Errorf(ctx, "RabbitMq Connect Err(%+v) Conf(%+v)", err, a.Conf)
 		return err
 	}
 	a.Conn = iniConn
@@ -143,34 +147,37 @@ func (a *AMQP) Start() error {
 }
 
 func (a *AMQP) QueueDeclare() error {
+	ctx := context.Background()
 	// 初始化时，声明 Queue
 	chs, err := a.Conn.Channel()
 	if _, err := chs.QueueDeclare(a.Queue, true, false, false, false, nil); err != nil {
-		xlog.Warnf("queueDeclare(%v) err(%+v)", a.Queue, err)
+		xlog.Warnf(ctx, "queueDeclare(%v) err(%+v)", a.Queue, err)
 	}
 	defer chs.Close()
 	return err
 }
 
 func (a *AMQP) BindRoutingKey(routingKey string) error {
+	ctx := context.Background()
 	// 初始化时，通过routingKet绑定
 	chs, err := a.Conn.Channel()
 	defer chs.Close()
 
 	err = chs.QueueBind(a.Queue, routingKey, a.Exchange, false, nil)
 	if err != nil {
-		xlog.Warnf("queueBind queue(%v) routingKey(%v) exchange(%v) Err(%v)", a.Queue, routingKey, a.Exchange, err)
+		xlog.Warnf(ctx, "queueBind queue(%v) routingKey(%v) exchange(%v) Err(%v)", a.Queue, routingKey, a.Exchange, err)
 	}
 	return err
 
 }
 func (a *AMQP) Close() error {
-	xlog.Infof("RabbitMq 关闭 Exchange(%v) Queue(%v)", a.Exchange, a.Queue)
+	ctx := context.Background()
+	xlog.Infof(ctx, "RabbitMq 关闭 Exchange(%v) Queue(%v)", a.Exchange, a.Queue)
 	a.closeFlag = true
 	a.wg.Wait() // 平滑关闭
 	err := a.Conn.Close()
 	if err != nil {
-		xlog.Errorf("RabbitMq Close Err(%+v) Conf(%+v)", err, a.Conf)
+		xlog.Errorf(ctx, "RabbitMq Close Err(%+v) Conf(%+v)", err, a.Conf)
 	}
 	return err
 }
