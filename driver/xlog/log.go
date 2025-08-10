@@ -3,6 +3,7 @@ package xlog
 import (
 	"context"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -37,6 +38,9 @@ func Init(c *Config) {
 	// 设置日志级别
 	log.SetLevel(logrus.DebugLevel)
 
+	// 禁用logrus默认的stdout输出
+	log.SetOutput(io.Discard)  // 添加这一行，禁用默认输出
+
 	// 配置日志分割和级别分离
 	writerMap := setupLogRotation(c)
 	if writerMap != nil {
@@ -44,7 +48,7 @@ func Init(c *Config) {
 	}
 
 	// 配置标准输出
-	if c.Stdout == STDOUT_YES {
+	if c.Stdout == StdoutYes {
 		log.AddHook(lfshook.NewHook(
 			lfshook.WriterMap{
 				logrus.DebugLevel: os.Stdout,
@@ -85,12 +89,12 @@ func setupLogRotation(c *Config) lfshook.WriterMap {
 
 	// 定义各级别日志路径
 	logLevels := map[logrus.Level]string{
-		logrus.DebugLevel: filepath.Join(c.Dir, c.Name, "debug", "debug.log"),
-		logrus.InfoLevel:  filepath.Join(c.Dir, c.Name, "info", "info.log"),
-		logrus.WarnLevel:  filepath.Join(c.Dir, c.Name, "warn", "warn.log"),
-		logrus.ErrorLevel: filepath.Join(c.Dir, c.Name, "error", "error.log"),
-		logrus.FatalLevel: filepath.Join(c.Dir, c.Name, "fatal", "fatal.log"),
-		logrus.PanicLevel: filepath.Join(c.Dir, c.Name, "panic", "panic.log"),
+		logrus.DebugLevel: filepath.Join(c.Dir, "debug.log"),
+		logrus.InfoLevel:  filepath.Join(c.Dir, "info.log"),
+		logrus.WarnLevel:  filepath.Join(c.Dir, "warn.log"),
+		logrus.ErrorLevel: filepath.Join(c.Dir, "error.log"),
+		logrus.FatalLevel: filepath.Join(c.Dir, "fatal.log"),
+		logrus.PanicLevel: filepath.Join(c.Dir, "panic.log"),
 	}
 
 	writerMap := lfshook.WriterMap{}
@@ -122,9 +126,22 @@ func setupLogRotation(c *Config) lfshook.WriterMap {
 
 // GenerateLogID 生成自动log_id: 毫秒时间戳+0~10000随机数
 func GenerateLogID() string {
-	millisecond := time.Now().UnixNano() / 1e6
+	now := time.Now()
+
+	// 提取小时、分钟、秒和毫秒
+	hour := now.Hour()
+	minute := now.Minute()
+	second := now.Second()
+	millisecond := now.Nanosecond() / 1e6 // 转换纳秒到毫秒
+
+	// 组合时间部分：小时(2位)+分钟(2位)+秒(2位)+毫秒(3位)
+	timePart := hour*10000000 + minute*100000 + second*1000 + millisecond
+
+	// 生成随机数
 	random := rand.Intn(RandomRange)
-	return fmt.Sprintf("%d%d", millisecond, random)
+
+	// 组合并返回结果
+	return fmt.Sprintf("%d%d", timePart, random)
 }
 
 // WithLogID 为context设置log_id

@@ -1,6 +1,7 @@
 package xgin
 
 import (
+	"fmt"
 	"github.com/HaleyLeoZhang/go-component/driver/xmetric"
 	"github.com/gin-gonic/gin"
 	"net/url"
@@ -19,8 +20,9 @@ func HttpMetrics() gin.HandlerFunc {
 		l, _ := url.Parse(c.Request.URL.String())
 		path := l.Path
 		method := c.Request.Method
+		httpStatus := fmt.Sprintf("%v", c.Writer.Status()) // 响应状态码
 		// 记录指标
-		xmetric.MetricHttpResponse.WithLabelValues(method, path).Observe(float64(takeTime.Milliseconds()))
+		xmetric.MetricHttpResponse.WithLabelValues(method, path, httpStatus).Observe(float64(takeTime.Milliseconds()))
 		xmetric.MetricHttpRequestCount.WithLabelValues(method, path).Inc()
 	}
 }

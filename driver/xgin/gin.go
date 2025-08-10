@@ -2,6 +2,7 @@ package xgin
 
 import (
 	"context"
+	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -34,7 +35,13 @@ func New(c *Config) *gin.Engine {
 
 // 获取单个Gin
 func NewGin(c *gin.Context) *Gin {
-	ctx, cancelFun := context.WithTimeout(context.Background(), timeout)
+	var (
+		ctx       = context.Background()
+		cancelFun context.CancelFunc
+	)
+	ctx = xlog.WithLogID(ctx, xlog.GenerateLogID())
+	ctx, cancelFun = context.WithTimeout(ctx, timeout)
+	defer cancelFun()
 
 	o := &Gin{
 		GinContext: c,
