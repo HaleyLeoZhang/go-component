@@ -1,16 +1,16 @@
 package xlog
 
 import (
+	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
 
-	"context"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"math/rand"
 )
 
 // 常量定义
@@ -29,9 +29,9 @@ func init() {
 
 // Init 初始化日志配置
 func Init(c *Config) {
-	// 设置日志格式为JSON，包含log_id字段
+	// 设置日志格式为JSON，指定中国时区时间格式
 	log.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: "2006-01-02 15:04:05.000",
+		TimestampFormat: "2006-01-02 15:04:05", // 目标时间格式
 	})
 
 	// 设置日志级别
@@ -120,8 +120,8 @@ func setupLogRotation(c *Config) lfshook.WriterMap {
 	return writerMap
 }
 
-// 生成自动log_id: 毫秒时间戳+0~10000随机数
-func generateLogID() string {
+// GenerateLogID 生成自动log_id: 毫秒时间戳+0~10000随机数
+func GenerateLogID() string {
 	millisecond := time.Now().UnixNano() / 1e6
 	random := rand.Intn(RandomRange)
 	return fmt.Sprintf("%d%d", millisecond, random)
@@ -135,29 +135,65 @@ func WithLogID(ctx context.Context, logID string) context.Context {
 // GetLogID 从context获取log_id，不存在则生成新的
 func GetLogID(ctx context.Context) string {
 	if ctx == nil {
-		return generateLogID()
+		return ""
 	}
 
 	logID, ok := ctx.Value(LogCtxID).(string)
 	if !ok || logID == "" {
-		return generateLogID()
+		return ""
 	}
 	return logID
 }
 
-// 带context的日志方法，会自动处理log_id
+// 带context的日志方法，自动处理log_id，兼容纯字符串format
 func Infof(ctx context.Context, format string, args ...interface{}) {
-	log.WithField("log_id", GetLogID(ctx)).Logf(logrus.InfoLevel, format, args...)
+	entry := log.WithField("log_id", GetLogID(ctx))
+	if len(args) == 0 {
+		// 没有格式化参数时，直接打印字符串
+		entry.Log(logrus.InfoLevel, format)
+	} else {
+		// 有格式化参数时，使用格式化打印
+		entry.Logf(logrus.InfoLevel, format, args...)
+	}
 }
 
 func Warnf(ctx context.Context, format string, args ...interface{}) {
-	log.WithField("log_id", GetLogID(ctx)).Logf(logrus.WarnLevel, format, args...)
+	entry := log.WithField("log_id", GetLogID(ctx))
+	if len(args) == 0 {
+		entry.Log(logrus.WarnLevel, format)
+	} else {
+		entry.Logf(logrus.WarnLevel, format, args...)
+	}
 }
 
 func Errorf(ctx context.Context, format string, args ...interface{}) {
-	log.WithField("log_id", GetLogID(ctx)).Logf(logrus.ErrorLevel, format, args...)
+	entry := log.WithField("log_id", GetLogID(ctx))
+	if len(args) == 0 {
+		entry.Log(logrus.ErrorLevel, format)
+	} else {
+		entry.Logf(logrus.ErrorLevel, format, args...)
+	}
 }
 
+func Debugf(ctx context.Context, format string, args ...interface{}) {
+	entry := log.WithField("log_id", GetLogID(ctx))
+	if len(args) == 0 {
+		entry.Log(logrus.DebugLevel, format)
+	} else {
+		entry.Logf(logrus.DebugLevel, format, args...)
+	}
+}
+
+func Fatalf(ctx context.Context, format string, args ...interface{}) {
+	entry := log.WithField("log_id", GetLogID(ctx))
+	if len(args) == 0 {
+		entry.Log(logrus.FatalLevel, format)
+	} else {
+		entry.Logf(logrus.FatalLevel, format, args...)
+	}
+}
+
+// 非格式化日志方法保持不变
 func Info(ctx context.Context, args ...interface{}) {
 	log.WithField("log_id", GetLogID(ctx)).Log(logrus.InfoLevel, args...)
 }
@@ -170,17 +206,8 @@ func Error(ctx context.Context, args ...interface{}) {
 	log.WithField("log_id", GetLogID(ctx)).Log(logrus.ErrorLevel, args...)
 }
 
-// 新增其他级别日志方法
-func Debugf(ctx context.Context, format string, args ...interface{}) {
-	log.WithField("log_id", GetLogID(ctx)).Logf(logrus.DebugLevel, format, args...)
-}
-
 func Debug(ctx context.Context, args ...interface{}) {
 	log.WithField("log_id", GetLogID(ctx)).Log(logrus.DebugLevel, args...)
-}
-
-func Fatalf(ctx context.Context, format string, args ...interface{}) {
-	log.WithField("log_id", GetLogID(ctx)).Logf(logrus.FatalLevel, format, args...)
 }
 
 func Fatal(ctx context.Context, args ...interface{}) {
