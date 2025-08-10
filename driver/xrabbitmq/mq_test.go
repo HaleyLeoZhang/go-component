@@ -1,6 +1,7 @@
 package xrabbitmq
 
 import (
+	"context"
 	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 	"testing"
 	"time"
@@ -11,6 +12,7 @@ var config = &Config{}
 var routineKey = "email.sender"
 
 func TestMain(m *testing.M) {
+	ctx := context.Background()
 	config.Host = "192.168.56.110"
 	config.Port = 5672
 	config.Name = "email_server_local"
@@ -25,7 +27,7 @@ func TestMain(m *testing.M) {
 	app.Start()
 	app.QueueDeclare()
 	app.BindRoutingKey(routineKey) // 初始化约定要绑定的 routing_key
-	xlog.Infof("RabbitMQ.Init.Exchange (%v) Queue (%v)", app.Exchange, app.Queue)
+	xlog.Infof(ctx, "RabbitMQ.Init.Exchange (%v) Queue (%v)", app.Exchange, app.Queue)
 	m.Run()
 	app.Close()
 }

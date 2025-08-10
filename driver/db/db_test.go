@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	var err error
 	db, err = New(dbConfig)
 	if err != nil {
-		xlog.Errorf("Init DB failed!")
+		xlog.Errorf(ctx, "Init DB failed!")
 		return
 	}
 	os.Exit(m.Run())

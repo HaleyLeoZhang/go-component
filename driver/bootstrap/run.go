@@ -1,19 +1,24 @@
 package bootstrap
 
 import (
-	"github.com/HaleyLeoZhang/go-component/driver/xlog"
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 )
 
 type Bootstrap struct {
 	ExitSignal  chan os.Signal
 	NotifyError chan error
+	ctx         context.Context
 }
 
 func New() *Bootstrap {
-	return &Bootstrap{}
+	return &Bootstrap{
+		ctx: context.Background(),
+	}
 }
 
 /**
@@ -23,12 +28,12 @@ func (b *Bootstrap) Start(callback func()) *Bootstrap {
 	defer func() {
 		if p := recover(); p != nil {
 			//xlog.Errorf("App(%v).Panic.(%v)", conf.Conf.ServiceName, p)
-			xlog.Errorf("App.Panic.(%v)", p)
+			xlog.Errorf(b.ctx, "App.Panic.(%v)", p)
 		}
 	}()
-	xlog.Info("Bootstrap ing")
+	xlog.Info(b.ctx, "Bootstrap ing")
 	callback()
-	xlog.Info("Bootstrap done")
+	xlog.Info(b.ctx, "Bootstrap done")
 	return b
 }
 
@@ -45,16 +50,16 @@ func (b *Bootstrap) Stop(callback func()) {
 	for {
 		select {
 		case s := <-b.ExitSignal: // 阻塞直至有信号传入
-			xlog.Infof("Received Exit Signal: %v", s)
+			xlog.Infof(b.ctx, "Received Exit Signal: %v", s)
 			callback()
 			os.Exit(0)
 		case err := <-b.NotifyError:
-			xlog.Errorf("Bootstrap Start Err(%+v)", err)
+			xlog.Errorf(b.ctx, "Bootstrap Start Err(%+v)", err)
 			b.ExitSignal <- syscall.SIGINT
 			//case <-time.After(time.Second * 3): // 检测进程是否存活，暂不需要
-			//	xlog.Info("Bootstrap.Loop.Alive")
+			//	xlog.Info(b.ctx,"Bootstrap.Loop.Alive")
 		}
-		xlog.Info("Bootstrap test")
+		xlog.Info(b.ctx, "Bootstrap test")
 	}
 
 }

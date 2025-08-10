@@ -82,14 +82,14 @@ func (g *GroupConsumer) setupHandler(sess sarama.ConsumerGroupSession) error {
 				if !ok {
 					return
 				}
-				xlog.Info(err)
+				xlog.Info(g.ctx, err)
 				if e, ok := err.(*sarama.ConsumerError); ok {
 					switch e.Err {
 					case sarama.ErrUnknownMemberId:
-						xlog.Errorf("The consumer ErrUnknownMemberId Topic(%v) consumerGroup(%v)", g.topics, g.group)
+						xlog.Errorf(g.ctx, "The consumer ErrUnknownMemberId Topic(%v) consumerGroup(%v)", g.topics, g.group)
 						return
 					case sarama.ErrRebalanceInProgress:
-						xlog.Errorf("The consumer ErrRebalanceInProgress Topic(%v) consumerGroup(%v)", g.topics, g.group)
+						xlog.Errorf(g.ctx, "The consumer ErrRebalanceInProgress Topic(%v) consumerGroup(%v)", g.topics, g.group)
 						return
 					}
 				}
@@ -177,9 +177,9 @@ func (g *GroupConsumer) Start() (err error) {
 	go func() {
 		defer g.waiter.Done()
 		for {
-			xlog.Infof("Listening Kafka Group(%v) Topic(%v)", g.group, strings.Join(g.topics, ","))
+			xlog.Infof(g.ctx, "Listening Kafka Group(%v) Topic(%v)", g.group, strings.Join(g.topics, ","))
 			if err := g.consumer.Consume(g.ctx, g.topics, g); err != nil {
-				xlog.Errorf("Error from consumer: %v", err)
+				xlog.Errorf(g.ctx, "Error from consumer: %v", err)
 				<-time.After(1 * time.Second) // 防止重试太快
 				continue
 			}

@@ -105,7 +105,7 @@ func TestRun(t *testing.T) {
 
 func loadConfig() (err error) {
 	var yamlFile string
-	yamlFile, err = filepath.Abs("./app.yaml")
+	yamlFile, err = filepath.Abs("./app.yml")
 	if err != nil {
 		return
 	}
@@ -280,7 +280,7 @@ func TestDoSearch(t *testing.T) {
 		return
 	}
 	// 解析数据
-	list, total = handleSearchData(result)
+	list, total = handleSearchData(ctx, result)
 	// ------ Print
 	t.Logf("total(%v)", total)
 	if total == 0 {
@@ -295,7 +295,7 @@ func TestDoSearch(t *testing.T) {
 }
 
 // 处理返回结果
-func handleSearchData(result *v7.SearchResult) (list []*BlogEsModel, totalInt64 int64) {
+func handleSearchData(ctx context.Context, result *v7.SearchResult) (list []*BlogEsModel, totalInt64 int64) {
 	list = make([]*BlogEsModel, 0)
 
 	totalInt64 = result.TotalHits()
@@ -308,7 +308,7 @@ func handleSearchData(result *v7.SearchResult) (list []*BlogEsModel, totalInt64 
 		err := json.Unmarshal(buf, &d)
 		if err != nil {
 			err = errors.WithStack(err)
-			xlog.Warnf("Warning value(%+v) err(%+v)", string(buf), err)
+			xlog.Warnf(ctx, "Warning value(%+v) err(%+v)", string(buf), err)
 			continue
 		}
 		// 固定解析数据类型返回
@@ -325,7 +325,7 @@ func TestDoDelete(t *testing.T) {
 		if v7.IsNotFound(err) || v7.IsConflict(err) {
 			err = nil
 		} else {
-			xlog.Errorf("DeleteSingleGoods Err(%+v) id(%v)", err, item.Id)
+			xlog.Errorf(ctx, "DeleteSingleGoods Err(%+v) id(%v)", err, item.Id)
 		}
 		return
 	}

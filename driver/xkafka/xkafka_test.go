@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 
 func InitConfig() {
 	var yamlFile string
-	yamlFile, err := filepath.Abs("./app.yaml") // 示例的kafka配置文件请看这个文件
+	yamlFile, err := filepath.Abs("./app.yml") // 示例的kafka配置文件请看这个文件
 	if err != nil {
 		panic(err)
 	}
@@ -75,62 +75,63 @@ func TestConsumer(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	// 因为上面 Start() 方法不阻塞，为了消费者正常消费，请不要让主进程退出
-	xlog.Infof("consumer going to shutdown")
+	xlog.Infof(ctx, "consumer going to shutdown")
 	//<-time.After(1 * time.Minute)
 	<-time.After(1 * time.Minute)
 	cancel()
-	xlog.Infof("waiting close")
+	xlog.Infof(ctx, "waiting close")
 	wg.Wait() // 等待消费者关闭
-	xlog.Infof("consumer done")
+	xlog.Infof(ctx, "consumer done")
 }
 
 func testHandler(ctx context.Context, message *sarama.ConsumerMessage) error {
-	xlog.Infof("offset(%v) message(%v) ", message.Offset, string(message.Value))
+	xlog.Infof(ctx, "offset(%v) message(%v) ", message.Offset, string(message.Value))
 	return nil
 }
 
 // 消息转对应结构体--并去重
-func mergeEmailMessageHandler(msgs []*sarama.ConsumerMessage) (batchList []*TestSmtp) {
+func mergeEmailMessageHandler(ctx context.Context, msgs []*sarama.ConsumerMessage) (batchList []*TestSmtp) {
 	batchList = make([]*TestSmtp, 0, len(msgs))
 	for _, msg := range msgs {
 		batchInfo := &TestSmtp{}
 		err := json.Unmarshal(msg.Value, &batchInfo)
 		if err != nil {
-			xlog.Errorf("kafkaMergeMsgs topic(%s) val(%s) Err(%+v) ", msg.Topic, string(msg.Value), err)
+			xlog.Errorf(ctx, "kafkaMergeMsgs topic(%s) val(%s) Err(%+v) ", msg.Topic, string(msg.Value), err)
 			continue
 		}
 		batchList = append(batchList, batchInfo)
-		xlog.Infof("kafkaMergeMsgs message(%+v) success topic(%+v) partition(%d) offset(%d)", batchInfo, msg.Topic, msg.Partition, msg.Offset)
+		xlog.Infof(ctx, "kafkaMergeMsgs message(%+v) success topic(%+v) partition(%d) offset(%d)", batchInfo, msg.Topic, msg.Partition, msg.Offset)
 	}
 	return
 }
 
 // 生产者测试
 func TestProducer(t *testing.T) {
+	ctx := context.Background()
 	testTopic := TopicName
 	d := NewProducer(config.Kafka)
 	one := &TestSmtp{}
 	one.SenderName = "测试同步"
 	bs, _ := json.Marshal(one)
-	err := d.SendMsg(testTopic, bs)
+	err := d.SendMsg(ctx, testTopic, bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	one.SenderName = "测试Key"
 	bs, _ = json.Marshal(one)
-	err = d.SendMsgByKey(testTopic, "key2333", bs)
+	err = d.SendMsgByKey(ctx, testTopic, "key2333", bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	one.SenderName = "测试异步"
 	bs, _ = json.Marshal(one)
-	err = d.SendMsgAsync(testTopic, bs)
+	err = d.SendMsgAsync(ctx, testTopic, bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 	one.SenderName = "测试异步key"
 	bs, _ = json.Marshal(one)
-	err = d.SendMsgAsyncByKey(testTopic, "key2333", bs)
+	err = d.SendMsgAsyncByKey(ctx, testTopic, "key2333", bs)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

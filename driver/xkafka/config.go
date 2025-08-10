@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func (config *Config) GetSaramaConf() *sarama.Config {
-	//配置详情见 当前驱动下的 app.yaml
+	//配置详情见 当前驱动下的 app.yml
 	defaultConfig := sarama.NewConfig()
 
 	if config.Admin.TimeOut != 0 {

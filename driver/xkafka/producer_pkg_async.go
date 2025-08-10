@@ -1,6 +1,7 @@
 package xkafka
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/HaleyLeoZhang/go-component/driver/xlog"
@@ -144,16 +145,17 @@ func (producer *AsyncProducer) handleError() {
 	var (
 		err *sarama.ProducerError
 		ok  bool
+		ctx = context.Background()
 	)
 	for {
 		select {
 		case err, ok = <-producer.producer.Errors():
 			if err != nil {
-				xlog.Errorf("producer message error, partition:%d offset:%d key:%v value:%s error(%v)", err.Msg.Partition, err.Msg.Offset, err.Msg.Key, err.Msg.Value, err.Err)
+				xlog.Errorf(ctx, "producer message error, partition:%d offset:%d key:%v value:%s error(%v)", err.Msg.Partition, err.Msg.Offset, err.Msg.Key, err.Msg.Value, err.Err)
 			}
 
 			if !ok {
-				xlog.Warn("producer ProducerError has be closed, break the handleError goroutine")
+				xlog.Warn(ctx, "producer ProducerError has be closed, break the handleError goroutine")
 				return
 			} else {
 				atomic.AddInt64(&producer.runCount, 1)
