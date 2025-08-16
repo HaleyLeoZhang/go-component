@@ -41,7 +41,7 @@ func NewGin(c *gin.Context) *Gin {
 	)
 	ctx = xlog.WithLogID(ctx, xlog.GenerateLogID())
 	ctx, cancelFun = context.WithTimeout(ctx, timeout)
-	defer cancelFun()
+	//defer cancelFun()
 
 	o := &Gin{
 		GinContext: c,
