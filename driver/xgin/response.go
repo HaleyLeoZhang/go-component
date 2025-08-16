@@ -54,12 +54,12 @@ func (o *Gin) Response(ctx context.Context, err error, data interface{}) {
 		message = businessError.Message
 		data = nil
 		xlog.Warnf(ctx, "Response BusinessError(%v)", err)
-		//o.GinContext.JSON(http.StatusOK, ResponseModel{
-		//	Code:  code,
-		//	Msg:   message,
-		//	Data:  data,
-		//	ReqID: reqID,
-		//})
+		o.GinContext.JSON(http.StatusOK, ResponseModel{
+			Code:  code,
+			Msg:   message,
+			Data:  data,
+			ReqID: reqID,
+		})
 	default: // 不可预期错误
 		code = HTTP_RESPONSE_CODE_UNKNOWN_FAIL
 		message = "服务繁忙"

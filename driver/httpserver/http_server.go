@@ -1,9 +1,7 @@
 package httpserver
 
 import (
-	"context"
 	"fmt"
-	"github.com/HaleyLeoZhang/go-component/driver/xlog"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
@@ -25,16 +23,14 @@ type Config struct {
 func Run(c *Config, routersInit *gin.Engine) {
 	addrString := fmt.Sprintf("%s:%v", c.Ip, c.Port)
 
-	ctx := context.Background()
-
 	if c.Pprof {
 		// pprof 相关说明 http://www.hlzblog.top/article/74.html
-		xlog.Info(ctx, "Enabled pprof")
+		fmt.Println("Enabled pprof")
 		Wrap(routersInit)
 	}
 	if c.Metrics {
 		// prometheus 相关说明 https://prometheus.io/docs/guides/go-application/
-		xlog.Info(ctx, "Enabled metrics")
+		fmt.Println("Enabled metrics")
 		WrapPrometheus(routersInit)
 	}
 
@@ -45,9 +41,10 @@ func Run(c *Config, routersInit *gin.Engine) {
 		WriteTimeout:   c.WriteTimeout,
 		MaxHeaderBytes: c.MaxHeaderBytes,
 	}
-	xlog.Infof(ctx, "Start http server listening %s", addrString)
+	fmt.Println("Start http server listening ", addrString)
 	err := server.ListenAndServe()
 	if err != nil {
-		xlog.Errorf(ctx, "HttpServer.Err %+v", err)
+		msg := fmt.Sprintf("HttpServer.Err %+v", err)
+		fmt.Println(msg)
 	}
 }
