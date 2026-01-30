@@ -61,6 +61,11 @@ func Init(c *Config) {
 			log.Formatter,
 		))
 	}
+
+	// 启动后台清理协程
+	if c.Dir != "" {
+		go startBackgroundCleaner(c)
+	}
 }
 
 // setupLogRotation 配置日志轮转
@@ -122,6 +127,62 @@ func setupLogRotation(c *Config) lfshook.WriterMap {
 	}
 
 	return writerMap
+}
+
+// startBackgroundCleaner 启动后台日志清理协程
+func startBackgroundCleaner(c *Config) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		maxAge := 7 * 24 * time.Hour
+		if c.MaxAge > 0 {
+			maxAge = time.Duration(c.MaxAge) * 24 * time.Hour
+		}
+
+		cleanOldLogs(c.Dir, maxAge)
+	}
+}
+
+// cleanOldLogs 清理指定目录下的过期日志文件
+func cleanOldLogs(dir string, maxAge time.Duration) {
+	threshold := time.Now().Add(-maxAge)
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		// 只清理带时间戳的日志文件（格式：xxx.log.YYYYMMDDHH）
+		if !isRotatedLogFile(path) {
+			return nil
+		}
+
+		if info.ModTime().Before(threshold) {
+			if err := os.Remove(path); err != nil {
+				log.Errorf("删除过期日志文件失败 %s: %v", path, err)
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Errorf("清理日志目录失败: %v", err)
+	}
+}
+
+// isRotatedLogFile 判断是否是轮转的日志文件
+func isRotatedLogFile(path string) bool {
+	// 匹配模式: xxx.log.YYYYMMDDHH 或 xxx.log.YYYYMMDD
+	// 例如: debug.log.2025013015 或 debug.log.20250130
+	matched, _ := filepath.Match("*.log.[0-9]*", filepath.Base(path))
+	if !matched {
+		return false
+	}
+	return true
 }
 
 // GenerateLogID 生成自动log_id: 毫秒时间戳+0~10000随机数
